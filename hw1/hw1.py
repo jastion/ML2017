@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-import matplotlib as pl
+import matplotlib as mpl
 import time
 import csv
 from lin_grad import LineGradDesc
@@ -16,9 +16,10 @@ from lin_grad import LineGradDesc
 # 8  PM10			17 	WS_HR
 np.set_printoptions(linewidth=1e3, edgeitems=1e2, suppress=True,precision=3)
 csvTraining  = np.genfromtxt(sys.argv[1], dtype="f", skip_header=False, delimiter = ",")
-csvTesting = np.genfromtxt(sys.argv[2], skip_header=True, delimiter = ",")
+csvTesting = np.genfromtxt(sys.argv[2], dtype="f", skip_header=False, delimiter = ",")
 
 csvTraining = csvTraining[1:,2:]
+csvTesting = csvTesting[:,2:]
 #test = csvTraining[1:5,2:8]
 #print (test)
 #test = np.split(test,2)
@@ -30,11 +31,11 @@ csvTraining = csvTraining[1:,2:]
 #features = np.array([9])
 features = np.arange(18)
 #print (features)
-hours = np.arange(24) 
+hours = np.arange(9) 
 print(features)
 print(hours)
 #print (test)
-lineGrad = LineGradDesc(csvTraining, csvTesting , features, hours, 0.2)
+lineGrad = LineGradDesc(csvTraining, csvTesting , features, hours, 0.2, 2, 9)
 
 
 csvOutput = csvTraining
