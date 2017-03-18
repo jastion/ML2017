@@ -1,4 +1,3 @@
 #!/bin/bash
 
-python3 lin_grad.py $1 $2
-
+python3 hw1.py $1 $2
