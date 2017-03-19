@@ -27,31 +27,38 @@ class LineGradDesc:
 		self.percentVerify = inputVerify
 
 		self.setTraining = inputTraining
-		self.setTest = inputTest
-		print (len(self.idxFeatures))
-		print(len(self.rangeHours))
+		self.setTesting = inputTest
 		self.numWeights = len(self.idxFeatures) * len(self.rangeHours)
 		self.weights = np.random.rand(self.numWeights,1)
-		print(self.weights.shape)
 		self.bias = np.random.rand(1,1)
-
 		self.setTraining, self.setTrainingPM25 = self.sort_training_data()
-		self.setTest = self.sort_testing_data()
-
+		self.setTesting, self.setTestingPM25 = self.sort_testing_data()
 		
 		#np.savetxt("output2.csv", self.setTraining,fmt="%s", delimiter=","), 
 		np.random.shuffle(self.setTraining)
 		#features*hours*
 		#np.savetxt("output1.csv", self.setTraining,fmt="%s", delimiter=","),
+		#print (self.setTraining.shape)
+		self.setTraining, self.meanTraining, self.stDevTraining = self.norm_features(self.setTraining)
+		#self.setTesting, self.meanTesting, self.stDevTesting = self.norm_features(self.setTesting)
+		#print(self.setTraining.shape)
+		numData = self.setTraining.shape[0]
 
-		self.setTraining, self.mean, self.stDev = self.norm_features()
+		idxSegment = numData - int(numData*inputVerify)
+		#print (idxSegment)
 
-		self.setTraining = self.setTraining[int(self.setTraining.shape[0]*inputVerify):,:]
-		self.setValidation = self.setTraining[:int(self.setTraining.shape[0] * inputVerify),:]
+		self.setValidation = self.setTraining[idxSegment:,:]
+		self.setTraining = self.setTraining[:idxSegment,:]
+		
 
-		self.setTrainingPM25 = self.setTrainingPM25[:,9]
-		self.setValidationPM25 = self.setTrainingPM25[:,9]
-
+		#print (self.setTrainingPM25)
+		self.setValidationPM25 = self.setTrainingPM25[idxSegment:,:]
+		self.setTrainingPM25 = self.setTrainingPM25[:idxSegment,:]
+		
+		#print (self.setTrainingPM25.shape)
+		#print (self.setValidationPM25.shape)
+		#print (self.setTraining.shape)
+		#print (self.setValidation.shape)
 		print ("Initialize Complete!")
 
 	def sort_training_data(self):
@@ -61,7 +68,42 @@ class LineGradDesc:
 		idxNans = np.isnan(csvData)
 		csvData[idxNans] = 0
 		
+		csvData = csvData.clip(min=0)
 		#Reorganize into an 18xN array
+		csvData = np.vsplit(csvData,csvData.shape[0]/18)
+		csvData = np.concatenate(csvData,1)
+
+		#Pick selected features
+		csvData = csvData[self.idxFeatures,:]
+		csvData = csvData.T
+
+		idxStart = 0;		
+		idxEnd = 9;
+		csvFinal = np.array([]).reshape(0,self.numWeights)
+		pm25 = csvFinal
+		while (idxEnd < csvData.shape[0]-1):
+			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,self.numWeights)
+			csvFinal = np.vstack((csvFinal,csvTmp))
+			pm25 = np.append(pm25,csvData[idxEnd+1,9])
+			if ((idxEnd+1)%480 == 0):
+				#print(idxStart, idxEnd)
+
+				idxStart = idxEnd + 1
+				idxEnd = idxStart + 9
+				#print(idxStart, idxEnd)
+
+			else:
+				idxStart +=1
+				idxEnd +=1
+		#pm25 = csvData[,9]
+		#outputs 5652,162
+		return csvFinal, pm25.reshape(pm25.shape[0],1)
+
+	def sort_testing_data(self):
+		csvData = self.setTesting
+		idxNans = np.isnan(csvData)
+		csvData[idxNans] = 0
+		#Reorganize into an Nx18 array
 		csvData = np.vsplit(csvData,csvData.shape[0]/18)
 		csvData = np.concatenate(csvData,1)
 		#Pick selected features
@@ -72,33 +114,24 @@ class LineGradDesc:
 		idxEnd = 9;
 		csvFinal = np.array([]).reshape(0,self.numWeights)
 		pm25 = csvFinal
-		while (idxEnd < csvData.shape[0]):
-			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,162)
+
+		while (idxEnd < csvData.shape[0]-1):
+			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,self.numWeights)
 			csvFinal = np.vstack((csvFinal,csvTmp))
 			pm25 = np.append(pm25,csvData[idxEnd+1,9])
 			if ((idxEnd+1)%480 == 0):
-				print(idxStart, idxEnd)
+				#print(idxStart, idxEnd)
 
 				idxStart = idxEnd + 1
 				idxEnd = idxStart + 9
-				print(idxStart, idxEnd)
+				#print(idxStart, idxEnd)
 
 			else:
 				idxStart +=1
 				idxEnd +=1
 		#pm25 = csvData[,9]
 		#outputs 5652,162
-		print(csvFinal.shape)
-		return csvFinal, pm25
-
-	def sort_testing_data(self):
-		csvData = self.setTest
-		idxNans = np.isnan(csvData)
-		csvData[idxNans] = 0
-		#Reorganize into an Nx18 array
-		csvData = np.vsplit(csvData,csvData.shape[0]/18)
-		csvData = np.concatenate(csvData,1)
-		return csvData.T
+		return csvFinal, pm25.reshape(pm25.shape[0],1)
 
 	def cost_fcn(self):
 		'''
@@ -106,27 +139,30 @@ class LineGradDesc:
 		takes form of the following:
 		L(f) = sum (y_n - y) where y is a linear line
 		'''
+
+
 		setTrain = self.setTraining
-		setValidation = self.setValidation
 		setTrainPM25 = self.setTrainingPM25
+
 		setValidationPM25 = self.setValidationPM25
+		setValidation = self.setValidation
 
-		yValid = xValid.dot(self.weights) + self.bias
-		yTrain= xTrain.dot(self.weights) + self.bias
+		yTrain= setTrain.dot(self.weights) + self.bias
+		yValid = setValidation.dot(self.weights) + self.bias
 
-		lossTrain = rmse(setTrainPM25, yTrain)
-		lossValid = rmse(setValidationPM25, yValid)
+		lossTrain = self.rmse(setTrainPM25, yTrain)
+		lossValid = self.rmse(setValidationPM25, yValid)
 		return lossTrain, lossValid
 		
-	def rmse(actual, predicted):
-		sum_error = 0.0
+	def rmse(self, actual, predicted):
+		sumError = 0.0
 		for i in range(len(actual)):
 			predictionError = predicted[i] - actual[i]
 			sumError += (predictionError ** 2)
-		meanError = sumError / float(len(actual))
-		return sqrt(meanError)
+		error = (sumError / float(len(actual))) ** 0.5
+		return error
 
-	def norm_features(self):
+	def norm_features(self, setInput):
 		'''
 		Returns a normalized version of X.
 		normalized X is calculated as follows
@@ -135,8 +171,7 @@ class LineGradDesc:
 		'''
 		meanI = []
 		stDevI = []
-		setInput = self.setTraining
-		setNorm = self.setTraining
+		setNorm = setInput
 
 		for idx in range(setInput.shape[1]):
 			tmpMean = np.nanmean(setInput[:, idx])
@@ -156,19 +191,62 @@ class LineGradDesc:
 	def grad_desc(self, iterations, eta):
 		self.eta = eta;
 		self.iterations = iterations
-		X = self.setTraining #Nx18
+		X = self.setTraining #Nx162
 		yActual = self.setTrainingPM25
-
+		
+		dwTotal = 1
+		dbTotal = 1
 		for idx in range(1,iterations+1):
-			X = self.setTraining[idxStart:idxEnd,:].reshape(162,1)
+			dw = 0
+			db = 0
+
+			X = self.setTraining
 			yPredict = X.dot(self.weights) + self.bias
-
+			#print(yPredict.shape)
 			deltaError = yPredict - yActual
-			diffWeight = 2 * deltaError *(-X.T)
-			diffBias = 2 * deltaError * -1
+			#print(deltaError.shape)
+			tmpWeight = (2 * deltaError *(-X)).T
+			tmpBias = 2 * deltaError * (-1)
 
+			diffWeight = np.sum(tmpWeight,1).reshape(tmpWeight.shape[0],1)
+			diffBias = np.sum(tmpBias,0).reshape(1,1)
 
-			
+			dwTotal += diffWeight**2
+			dbTotal += diffBias**2
+			self.weights += (eta * diffWeight)/np.sqrt(dwTotal)
+			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
+			'''
+			if (diffWeight < 0):
+				self.weights += (eta * diffWeight)/np.sqrt(dwTotal)
+			else:
+				self.weights -= (eta * diffWeight)/np.sqrt(dwTotal)
 
+			if (diffBias < 0):
+				self.bias += (eta * diffBias)/np.sqrt(dbTotal)
+			else:
+				self.bias -= (eta * diffBias)/np.sqrt(dbTotal)
+			'''
+			if idx%1000 == 0 or idx == 1:
+				valid_loss_error, train_loss_value = self.cost_fcn()
+				print ("Iterations: %d Valid cost: %f Train cost:  %f" %(idx,valid_loss_error,train_loss_value))
+
+		print("Descent Complete!")
 		return 0
 
+	def run_test_set(self):
+		setTesting = ((self.setTesting-self.meanTraining)/self.stDevTraining)
+		prediction = setTesting.dot(self.weights)+self.bias
+
+		csvOutput = np.zeros((240+1,1+1), dtype ="|S6")
+		csvOutput[0,0] = "id"
+		csvOutput[0,1] = "value"
+
+		for idx in range (240):
+			csvOutput[idx+1,0] = "id_" + str(idx)
+			csvOutput[idx+1,1] = float(prediction[idx,0])
+
+		np.savetxt("./data/w_pm25.csv", self.weights, delimiter = ",", fmt = "%s")
+		np.savetxt("./data/b_pm25.csv", self.bias, delimiter = ",", fmt = "%s")
+		np.savetxt("./data/test_output.csv", csvOutput, delimiter=",", fmt = "%s")
+
+		print("Save Complete!")

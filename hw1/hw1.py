@@ -4,6 +4,7 @@ import matplotlib as mpl
 import time
 import csv
 from lin_grad import LineGradDesc
+#from GradientDescent import GradDesc
 
 # 0  AMB_TEMP		9	PM2.5  
 # 1  CH4			10	RAINFALL
@@ -20,24 +21,14 @@ csvTesting = np.genfromtxt(sys.argv[2], dtype="f", skip_header=False, delimiter 
 
 csvTraining = csvTraining[1:,2:]
 csvTesting = csvTesting[:,2:]
-#test = csvTraining[1:5,2:8]
-#print (test)
-#test = np.split(test,2)
-#print (test)
-#test = np.hstack(test)
-#print (test)
-#print (test.shape)
-#print (test)
-#features = np.array([9])
-features = np.arange(18)
-#print (features)
-hours = np.arange(9) 
-print(features)
-print(hours)
-#print (test)
+features = np.array([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
+hours = np.arange(9)
 lineGrad = LineGradDesc(csvTraining, csvTesting , features, hours, 0.2, 2, 9)
-
-
-csvOutput = csvTraining
+lineGrad.grad_desc(1001, 1.0)
+lineGrad.run_test_set()
+#predict = GradDesc(csvTraining, csvTesting, valid_percent = 0.2)
+##predict.train_grad_ada(interation = 200, lr_rate = 0.2)
+#predict.test_function()
+#lineGrad.run_test_set()
 filename = time.strftime("%Y%m%d-%H%M%S_output.csv")
 #np.savetxt(filename, csv_output,fmt="%s", delimiter=","), 
