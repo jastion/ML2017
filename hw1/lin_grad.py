@@ -35,7 +35,7 @@ class LineGradDesc:
 		print(self.weights.shape)
 		self.bias = np.random.rand(1,1)
 
-		self.setTraining = self.sort_training_data()
+		self.setTraining, self.setTrainingPM25 = self.sort_training_data()
 		self.setTest = self.sort_testing_data()
 
 		
@@ -49,8 +49,8 @@ class LineGradDesc:
 		self.setTraining = self.setTraining[int(self.setTraining.shape[0]*inputVerify):,:]
 		self.setValidation = self.setTraining[:int(self.setTraining.shape[0] * inputVerify),:]
 
-		self.setTrainingPM25 = self.setTraining[:,9]
-		self.setValidationPM25 = self.setValidation[:,9]
+		self.setTrainingPM25 = self.setTrainingPM25[:,9]
+		self.setValidationPM25 = self.setTrainingPM25[:,9]
 
 		print ("Initialize Complete!")
 
@@ -67,7 +67,8 @@ class LineGradDesc:
 		#Pick selected features
 		csvData = csvData[self.idxFeatures,:]
 		csvData = csvData.T
-		idxStart = 0;
+
+		idxStart = 0;		
 		idxEnd = 9;
 		csvFinal = np.array([]).reshape(0,self.numWeights)
 		pm25 = csvFinal
@@ -75,7 +76,7 @@ class LineGradDesc:
 			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,162)
 			csvFinal = np.vstack((csvFinal,csvTmp))
 			pm25 = np.append(pm25,csvData[idxEnd+1,9])
-			if (idxEnd%479 == 0):
+			if ((idxEnd+1)%480 == 0):
 				print(idxStart, idxEnd)
 
 				idxStart = idxEnd + 1
@@ -88,7 +89,7 @@ class LineGradDesc:
 		#pm25 = csvData[,9]
 		#outputs 5652,162
 		print(csvFinal.shape)
-		return csvFinal
+		return csvFinal, pm25
 
 	def sort_testing_data(self):
 		csvData = self.setTest
@@ -156,12 +157,15 @@ class LineGradDesc:
 		self.eta = eta;
 		self.iterations = iterations
 		X = self.setTraining #Nx18
-		idxStart = 0;
-		idxEnd = 17;
+		yActual = self.setTrainingPM25
+
 		for idx in range(1,iterations+1):
 			X = self.setTraining[idxStart:idxEnd,:].reshape(162,1)
 			yPredict = X.dot(self.weights) + self.bias
 
+			deltaError = yPredict - yActual
+			diffWeight = 2 * deltaError *(-X.T)
+			diffBias = 2 * deltaError * -1
 
 
 			
