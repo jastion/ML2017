@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import time
 import csv
-from sklearn.metrics import mean_squared_error
+
 
 np.set_printoptions(linewidth=1e3, edgeitems=1e2)
 
@@ -32,14 +32,16 @@ class LineGradDesc:
 
 		#Initialize extra variables
 		self.numWeights = len(self.idxFeatures) * len(self.rangeHours)
+		print("numWeights: %d" %(self.numWeights))
 		self.weights = np.random.rand(self.numWeights,1)
 		self.bias = np.random.rand(1,1)
 
 		#Preprocess Data
 		self.setTraining, self.setTrainingPM25 = self.sort_training_data()
+		'''
 		self.setTesting, self.setTestingPM25 = self.sort_testing_data()
 		self.setTraining, self.meanTraining, self.stDevTraining = self.norm_features(self.setTraining)
-
+		#print (self.setTraining[0,:])
 		#np.savetxt("output2.csv", self.setTraining,fmt="%s", delimiter=","), 
 		
 		np.random.shuffle(self.setTraining)
@@ -59,11 +61,12 @@ class LineGradDesc:
 		#print (self.setTrainingPM25)
 		self.setValidationPM25 = self.setTrainingPM25[idxSegment:,:]
 		self.setTrainingPM25 = self.setTrainingPM25[:idxSegment,:]
-		
+
 		#print (self.setTrainingPM25.shape)
 		#print (self.setValidationPM25.shape)
 		#print (self.setTraining.shape)
 		#print (self.setValidation.shape)
+		'''
 		print ("Initialize Complete!")
 
 	def sort_training_data(self):
@@ -73,23 +76,32 @@ class LineGradDesc:
 		idxNans = np.isnan(csvData)
 		csvData[idxNans] = 0
 		
-		csvData = csvData.clip(min=0)
+		#csvData = csvData.clip(min=0)
 		#Reorganize into an 18xN array
 		csvData = np.vsplit(csvData,csvData.shape[0]/18)
 		csvData = np.concatenate(csvData,1)
+		pm25Data = csvData
 		#print(csvData.shape)
 		#Pick selected features
-		csvData = csvData[self.idxFeatures,:]
-		csvData = csvData.T
+		#np.savetxt("csvFinal2.csv", csvData.T,fmt="%s", delimiter=","), 
+		csvData = csvData
 
 		idxStart = 0;		
 		idxEnd = 9;
 		csvFinal = np.array([]).reshape(0,self.numWeights)
 		pm25 = csvFinal
+		a = np.arange(9)
 		while (idxEnd < csvData.shape[0]-1):
-			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,self.numWeights)
+			for idxRow in self.idxFeatures:
+				csvTmp = csvData[idxRow, idxStart:idxEnd]
+				csvFinal = np.append(csvFinal,csvTmp)
+				
+				#print(csvFinal)
+			print(csvFinal)
+			return 0,1
+			'''
 			csvFinal = np.vstack((csvFinal,csvTmp))
-			pm25 = np.append(pm25,csvData[idxEnd+1,9])
+			pm25 = np.append(pm25,pm25Data[idxEnd,9])
 			if ((idxEnd+1)%480 == 0):
 				#print(idxStart, idxEnd)
 
@@ -106,9 +118,12 @@ class LineGradDesc:
 		print (csvFinal.shape)
 		print(pm25.shape)
 		pm25 = pm25.reshape(pm25.shape[0],1)
-		print(pm25.shape)
-		#np.savetxt("csvFinal.csv", csvFinal,fmt="%s", delimiter=","), 
+		#print(pm25.shape)
+
+		np.savetxt("csvFinal.csv", csvFinal,fmt="%s", delimiter=","), 
 		return csvFinal, pm25 #[5651, 153] [5631, 1]
+		'''
+		return 0,1
 
 	def sort_testing_data(self):
 		csvData = self.setTesting
@@ -117,9 +132,12 @@ class LineGradDesc:
 		#Reorganize into an Nx18 array
 		csvData = np.vsplit(csvData,csvData.shape[0]/18)
 		csvData = np.concatenate(csvData,1)
+		pm25Data = csvData.T
 		#Pick selected features
 		csvData = csvData[self.idxFeatures,:]
 		csvData = csvData.T
+		
+
 
 		idxStart = 0;		
 		idxEnd = 9;
@@ -129,23 +147,19 @@ class LineGradDesc:
 		while (idxEnd < csvData.shape[0]-1):
 			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,self.numWeights)
 			csvFinal = np.vstack((csvFinal,csvTmp))
-			pm25 = np.append(pm25,csvData[idxEnd+1,9])
+			pm25 = np.append(pm25,pm25Data[idxEnd,9])
 			if ((idxEnd+1)%480 == 0):
-				#print(idxStart, idxEnd)
-
 				idxStart = idxEnd + 1
 				idxEnd = idxStart + 9
-				#print(idxStart, idxEnd)
 
 			else:
 				idxStart +=1
 				idxEnd +=1
 		#pm25 = csvData[,9]
 		#outputs 5652,162
-		print (csvFinal.shape)
-		print(pm25.shape)
+
 		pm25 = pm25.reshape(pm25.shape[0],1)
-		print(pm25.shape)
+
 		return csvFinal, pm25
 
 	def cost_fcn(self):
@@ -154,8 +168,6 @@ class LineGradDesc:
 		takes form of the following:
 		L(f) = sum (y_n - y) where y is a linear line
 		'''
-
-
 		setTrain = self.setTraining
 		setTrainPM25 = self.setTrainingPM25
 
@@ -174,7 +186,9 @@ class LineGradDesc:
 		for i in range(len(actual)):
 			predictionError = predicted[i] - actual[i]
 			sumError += (predictionError ** 2)
-		error = (sumError / float(len(actual))) ** 0.5
+		
+		error = (sumError / float(len(actual))) 
+		#error = error ** 0.5
 		return error
 
 	def norm_features(self, setInput):
@@ -206,20 +220,23 @@ class LineGradDesc:
 	def grad_desc(self, iterations, eta):
 		self.eta = eta;
 		self.iterations = iterations
-		X = self.setTraining #Nx162
+		
 		yActual = self.setTrainingPM25
 		
+		X = self.setTraining 
 		dwTotal = 1
 		dbTotal = 1
+		valid_loss_error = 0
+		train_loss_error = 0
 		for idx in range(1,iterations+1):
 			dw = 0
 			db = 0
+			
 
-			X = self.setTraining
 			yPredict = X.dot(self.weights) + self.bias
-			#print(yPredict.shape)
+
 			deltaError = yPredict - yActual
-			#print(deltaError.shape)
+
 			tmpWeight = (2 * deltaError *(-X)).T
 			tmpBias = 2 * deltaError * (-1)
 
