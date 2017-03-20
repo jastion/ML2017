@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import time
 import csv
+from sklearn.metrics import mean_squared_error
 
 np.set_printoptions(linewidth=1e3, edgeitems=1e2)
 
@@ -22,34 +23,38 @@ class LineGradDesc:
 	def __init__(self, inputTraining, inputTest, \
 		inputFeatures,inputHours,inputVerify,inputFolds, inputParameter):
 
+		#save input data
 		self.idxFeatures = inputFeatures
 		self.rangeHours = inputHours
 		self.percentVerify = inputVerify
-
 		self.setTraining = inputTraining
 		self.setTesting = inputTest
+
+		#Initialize extra variables
 		self.numWeights = len(self.idxFeatures) * len(self.rangeHours)
 		self.weights = np.random.rand(self.numWeights,1)
 		self.bias = np.random.rand(1,1)
+
+		#Preprocess Data
 		self.setTraining, self.setTrainingPM25 = self.sort_training_data()
 		self.setTesting, self.setTestingPM25 = self.sort_testing_data()
-		
+		self.setTraining, self.meanTraining, self.stDevTraining = self.norm_features(self.setTraining)
+
 		#np.savetxt("output2.csv", self.setTraining,fmt="%s", delimiter=","), 
+		
 		np.random.shuffle(self.setTraining)
 		#features*hours*
 		#np.savetxt("output1.csv", self.setTraining,fmt="%s", delimiter=","),
 		#print (self.setTraining.shape)
-		self.setTraining, self.meanTraining, self.stDevTraining = self.norm_features(self.setTraining)
+		
 		#self.setTesting, self.meanTesting, self.stDevTesting = self.norm_features(self.setTesting)
 		#print(self.setTraining.shape)
 		numData = self.setTraining.shape[0]
-
 		idxSegment = numData - int(numData*inputVerify)
 		#print (idxSegment)
 
 		self.setValidation = self.setTraining[idxSegment:,:]
 		self.setTraining = self.setTraining[:idxSegment,:]
-		
 
 		#print (self.setTrainingPM25)
 		self.setValidationPM25 = self.setTrainingPM25[idxSegment:,:]
@@ -72,7 +77,7 @@ class LineGradDesc:
 		#Reorganize into an 18xN array
 		csvData = np.vsplit(csvData,csvData.shape[0]/18)
 		csvData = np.concatenate(csvData,1)
-
+		#print(csvData.shape)
 		#Pick selected features
 		csvData = csvData[self.idxFeatures,:]
 		csvData = csvData.T
@@ -97,7 +102,13 @@ class LineGradDesc:
 				idxEnd +=1
 		#pm25 = csvData[,9]
 		#outputs 5652,162
-		return csvFinal, pm25.reshape(pm25.shape[0],1)
+		#print(csvFinal)
+		print (csvFinal.shape)
+		print(pm25.shape)
+		pm25 = pm25.reshape(pm25.shape[0],1)
+		print(pm25.shape)
+		#np.savetxt("csvFinal.csv", csvFinal,fmt="%s", delimiter=","), 
+		return csvFinal, pm25 #[5651, 153] [5631, 1]
 
 	def sort_testing_data(self):
 		csvData = self.setTesting
@@ -131,7 +142,11 @@ class LineGradDesc:
 				idxEnd +=1
 		#pm25 = csvData[,9]
 		#outputs 5652,162
-		return csvFinal, pm25.reshape(pm25.shape[0],1)
+		print (csvFinal.shape)
+		print(pm25.shape)
+		pm25 = pm25.reshape(pm25.shape[0],1)
+		print(pm25.shape)
+		return csvFinal, pm25
 
 	def cost_fcn(self):
 		'''
