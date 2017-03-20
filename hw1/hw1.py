@@ -42,14 +42,19 @@ setTest[setTest == "NR"] = 0
 setTest = setTest.astype(np.float)#(18,2160)
 
 features = np.arange(18)
-#features = np.array([8,9])
+#features = np.array([8,9,10,16]) 5.72 5.9, 6.19
+#features = np.array([8,9,10,16]) #5.89221 5,86 6.17
+features = np.array([4,5,6,8,9,10,16])
+#features = np.array([9,10,16])
+features = np.array([9])
 hours = np.arange(9)
 print ("Initializing")
 
-lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.15)
-lineGrad.grad_desc(20000, 0.2)
-lineGrad.run_test_set()
-
+lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.2) 
+#lineGrad.grad_desc(100000, 0.5)
+#lineGrad.run_test_set()
+lineGrad.neural_network(5000,0.1)
+#lineGrad.test_nn()
 #predict = GradDesc(csvTraining, csvTesting, valid_percent = 0.2)
 ##predict.train_grad_ada(interation = 200, lr_rate = 0.2)
 #predict.test_function()

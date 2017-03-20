@@ -5,7 +5,7 @@ import time
 import csv
 
 
-np.set_printoptions(linewidth=1e3, edgeitems=1e2)
+np.set_printoptions(linewidth=1e3, edgeitems=1e10)
 
 
 # 0  AMB_TEMP		9	PM2.5  
@@ -34,6 +34,7 @@ class LineGradDesc:
 		self.numWeights = len(self.idxFeatures) * len(self.rangeHours)
 		print("numWeights: %d" %(self.numWeights))
 		self.weights = np.random.rand(self.numWeights,1)
+		#self.bias = np.array([20]).reshape(1,1)
 		self.bias = np.random.rand(1,1)
 
 		#Preprocess Data
@@ -79,7 +80,7 @@ class LineGradDesc:
 
 		#Append the correct pm25 value to train_x_set
 		for months in range(12):
-			pm25 = np.append(pm25, self.setTraining[9,9+months*480:480+months*480])
+			pm25 = np.append(pm25, self.setTraining[len(self.rangeHours),len(self.rangeHours)+months*480:480+months*480])
 		pm25 = pm25.reshape(setX.shape[0],1)#(5652,1)
 		setTraining = np.append(setX,pm25,axis = 1)#(5652,163)
 		#np.savetxt("outputSetX.csv", setX,fmt="%s", delimiter=","), 
@@ -156,17 +157,21 @@ class LineGradDesc:
 	def grad_desc(self, iterations, eta):
 		self.eta = eta;
 		self.iterations = iterations
-		
+		#self.errorValid = np.array([]).reshape(iterations,1)
+		#self.errorTrain = np.array([]).reshape(iterations,1)
 		dwTotal = 1
 		dbTotal = 1
 		valid_loss_error = 0
 		train_loss_error = 0
 
+		np.random.seed(1)
+		X = self.setTraining[:,:-1].reshape(self.setTraining.shape[0],self.setTraining.shape[1]-1)#(4521,162)
+		yActual = self.setTraining[:,-1].reshape(self.setTraining.shape[0],1)#(4521,1)
+		
 		for idx in range(1,iterations+1):
 			dw = 0
 			db = 0
-			X = self.setTraining[:,:-1].reshape(self.setTraining.shape[0],self.setTraining.shape[1]-1)#(4521,162)
-			yActual = self.setTraining[:,-1].reshape(self.setTraining.shape[0],1)#(4521,1)
+
 
 			yPredict = X.dot(self.weights) + self.bias
 
@@ -194,9 +199,10 @@ class LineGradDesc:
 				self.bias -= (eta * diffBias)/np.sqrt(dbTotal)
 			'''
 			if idx%1000 == 0 or idx == 1:
-				valid_loss_error, train_loss_value = self.cost_fcn()
-				print ("Iterations: %d Valid cost: %f Train cost:  %f" %(idx,valid_loss_error,train_loss_value))
-
+				errorValid, errorTrain = self.cost_fcn()
+				print ("Iterations: %d Valid cost: %f Train cost:  %f" %(idx,errorValid,errorTrain))
+				#self.errorValid = errorValid
+				#self.errorTrain = errorTrain
 		print("Descent Complete!")
 		return 0
 
@@ -220,3 +226,140 @@ class LineGradDesc:
 		np.savetxt("./data/test_output.csv", csvOutput, delimiter=",", fmt = "%s")
 
 		print("Save Complete!")
+
+	def sigmoid(self,x):
+
+		output = 1.0/(1.0+(np.exp(-x)))
+		return output
+
+	def sigmoid_output_to_derivative(self,output):
+		return output*(1-output)
+
+	def neural_network(self, iterations, eta):
+		self.eta = eta;
+		self.iterations = iterations
+		#self.errorValid = np.array([]).reshape(iterations,1)
+		#self.errorTrain = np.array([]).reshape(iterations,1)
+		dwTotal = 1
+		dbTotal = 1
+		valid_loss_error = 0
+		train_loss_error = 0
+		#np.linalg.norm(self.setTraining)
+		np.random.seed(1)
+		X = self.setTraining[:,:-1].reshape(self.setTraining.shape[0],self.setTraining.shape[1]-1)#(4521,162)
+		X.astype("longfloat")
+		#print(X.shape)
+		y = self.setTraining[:,-1].reshape(self.setTraining.shape[0],1)#(4521,1)
+		#print("X Shape: " + str(X.shape))
+		#print(X[:2,:])
+
+		xValidation = self.setValidation[:,:-1]
+
+		np.random.seed(1)
+		hiddenLayer = 5
+		syn0 = 2*np.random.random((self.numWeights,int(np.mean(self.numWeights)))) - 1
+		#syn0 = 2*np.random.random((self.numWeights,1)) - 1
+		syn1 = 2*np.random.random((int(np.mean(self.numWeights)),1)) - 1	
+
+		prevSynWeightUpdate0 = np.zeros_like(syn0)
+		prevSynWeightUpdate1 = np.zeros_like(syn1)
+
+		syn0DirCount = np.zeros_like(syn0)
+		syn1DirCount = np.zeros_like(syn1)
+
+		#alphas = [0.0001,0.001,0.01,0.1,1,10,100,1000]
+		alphas = [0.0001]
+		for alpha in alphas:
+			#print (alpha)
+			for idx in xrange(iterations):
+				
+				layer0 = X
+				layer0V = 0
+				#np.savetxt("NN.csv", np.dot(layer0,syn0), delimiter = ",", fmt = "%s")
+
+				layer1 = self.sigmoid(np.dot(layer0,syn0))
+				#print("layer1 shape:" + str(layer1.shape))
+				#print(layer2.shape)
+				#print(syn1.shape)
+				layer2 = self.sigmoid(np.dot(layer1,syn1))
+
+				errorLayer2 = y - layer2
+
+				deltaLayer2 = errorLayer2*self.sigmoid_output_to_derivative(layer2)
+				#print("delta layer2: " + str(deltaLayer2.shape))
+				errorLayer1 = deltaLayer2.dot(syn1.T)
+				#errorLayer1 = y - layer1
+				if (idx % 1000) == 0:
+					print ("Error:" + str(np.mean(np.abs(errorLayer1))))
+				deltaLayer1 = errorLayer1*self.sigmoid_output_to_derivative(layer1)
+
+				#print("Layer 1 Shape: " + str(layer1.shape))
+				#print("layer 2 shape: " + str(layer2.shape))
+				#print("syn0 shape:" + str(syn0.shape))
+				#print("syn1 shape:" + str(syn1.shape))
+				synWeightUpdate0 = layer1.T.dot(deltaLayer2)
+				synWeightUpdate1 = layer2.T.dot(deltaLayer1)
+				#print("syn update0: " + str(synWeightUpdate0.shape))
+				#print("syn update1: " + str(synWeightUpdate1.shape))
+
+				#if idx > 0:
+			#		syn0DirCount += np.abs(((synWeightUpdate0 > 0)+0) - ((prevSynWeightUpdate0 > 0) + 0))
+		#			syn1DirCount += np.abs(((synWeightUpdate1 > 0)+0) - ((prevSynWeightUpdate1 > 0) + 0))
+				
+				#print (idx)
+				#print ("syn1 shape: " +str(syn1.shape))
+				#print (synWeightUpdate1.shape)
+				syn1 -= eta * synWeightUpdate1.T
+				syn0 -= alpha * synWeightUpdate0.T
+
+				prevSynWeightUpdate0 = synWeightUpdate0
+				prevSynWeightUpdate1 = synWeightUpdate1
+				'''
+				layer0 = X
+				layer1 = self.sigmoid(np.dot(layer0,syn0))
+
+				errorLayer1 = layer1 - y
+
+				sumError = 0.0
+				for i in range(len(errorLayer1)):
+					predictionError = errorLayer1[i]
+					sumError += (predictionError ** 2)
+				
+				error = (sumError / float(len(errorLayer1))) 
+				error = error ** 0.5
+				if idx%10 == 0 or idx == 1:
+					print("Error is: " + str(error))
+				deltaLayer1 = errorLayer1 * self.sigmoid_output_to_derivative(layer1)
+				syn0Deriv = np.dot(layer0.T,deltaLayer1)
+
+				syn0 += alpha*syn0Deriv
+				'''
+			#np.savetxt("./data/NN.csv", layer2, delimiter = ",", fmt = "%s")
+		self.syn0 = syn0
+		self.syn1 = syn1
+		return 0
+
+	def test_nn(self):
+		setTesting = ((self.setTesting-self.meanTraining)/self.stDevTraining)
+		#prediction = setTesting.dot(self.weights)+self.bias
+
+		syn0 = self.syn0
+		syn1 = self.syn1
+
+		layer0 = setTesting
+		layer1 = self.sigmoid(np.dot(layer0,syn0))
+		layer2 = self.sigmoid(np.dot(layer1,syn1))
+
+		csvOutput = np.zeros((240+1,1+1), dtype ="|S6")
+		csvOutput[0,0] = "id"
+		csvOutput[0,1] = "value"
+
+		for idx in range (240):
+			csvOutput[idx+1,0] = "id_" + str(idx)
+			csvOutput[idx+1,1] = float(layer2[idx,0])
+
+		np.savetxt("./data/w_pm25.csv", self.weights, delimiter = ",", fmt = "%s")
+		np.savetxt("./data/b_pm25.csv", self.bias, delimiter = ",", fmt = "%s")
+		np.savetxt("./data/NN_output.csv", layer2, delimiter=",", fmt = "%s")
+		return 0
+		
