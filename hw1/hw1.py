@@ -18,26 +18,37 @@ from lin_grad import LineGradDesc
 
 
 np.set_printoptions(linewidth=1e3, edgeitems=1e2, suppress=True,precision=3)
-csvTraining  = np.genfromtxt(sys.argv[1], dtype="f", skip_header=False, delimiter = ",")
-csvTesting = np.genfromtxt(sys.argv[2], dtype="f", skip_header=False, delimiter = ",")
 
-#print (csvTraining[0:2,1:5])
-#print (csvTraining.shape)
-
-
-#for idxCol in range(0,9):
-	#print idxCol
-csvTraining = csvTraining[1:,2:]
+csvTraining  = np.genfromtxt(sys.argv[1], dtype="S", skip_header=True, delimiter = ",")
+csvTraining = csvTraining[:,3:] 
+csvTesting = np.genfromtxt(sys.argv[2], dtype="S", skip_header=False, delimiter = ",")
 csvTesting = csvTesting[:,2:]
-#print(csvTraining.shape)
-#print(csvTraining[1:4,2:])
+
+
+setTrain = csvTraining[:18,:]
+
+for days in range(1,12*20):
+    setTrain = np.append(setTrain, csvTraining[days*18:days*18+18,:],1)
+
+setTrain[setTrain == "NR"] = 0#(if array have "NR" string, let it convert to float)
+setTrain = setTrain.astype(np.float)#(18,5760)
+
+setTest = csvTesting[:18,:]
+
+for days in range(1,12*20):
+    setTest = np.append(setTest, csvTesting[days*18:days*18+18,:],1)
+
+setTest[setTest == "NR"] = 0
+setTest = setTest.astype(np.float)#(18,2160)
+
 features = np.arange(18)
-#features = np.array([9])
+#features = np.array([8,9])
 hours = np.arange(9)
 print ("Initializing")
-lineGrad = LineGradDesc(csvTraining, csvTesting , features, hours, 0.2, 2, 9)
-#lineGrad.grad_desc(1, 1.0)
-#lineGrad.run_test_set()
+
+lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.15)
+lineGrad.grad_desc(20000, 0.2)
+lineGrad.run_test_set()
 
 #predict = GradDesc(csvTraining, csvTesting, valid_percent = 0.2)
 ##predict.train_grad_ada(interation = 200, lr_rate = 0.2)

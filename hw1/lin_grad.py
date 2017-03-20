@@ -21,7 +21,7 @@ np.set_printoptions(linewidth=1e3, edgeitems=1e2)
 class LineGradDesc:
 
 	def __init__(self, inputTraining, inputTest, \
-		inputFeatures,inputHours,inputVerify,inputFolds, inputParameter):
+		inputFeatures,inputHours,inputVerify,):
 
 		#save input data
 		self.idxFeatures = inputFeatures
@@ -37,9 +37,9 @@ class LineGradDesc:
 		self.bias = np.random.rand(1,1)
 
 		#Preprocess Data
-		self.setTraining, self.setTrainingPM25 = self.sort_training_data()
-		'''
-		self.setTesting, self.setTestingPM25 = self.sort_testing_data()
+		self.setTraining = self.sort_training_data()
+		self.setTesting = self.sort_testing_data()
+		
 		self.setTraining, self.meanTraining, self.stDevTraining = self.norm_features(self.setTraining)
 		#print (self.setTraining[0,:])
 		#np.savetxt("output2.csv", self.setTraining,fmt="%s", delimiter=","), 
@@ -58,109 +58,41 @@ class LineGradDesc:
 		self.setValidation = self.setTraining[idxSegment:,:]
 		self.setTraining = self.setTraining[:idxSegment,:]
 
-		#print (self.setTrainingPM25)
-		self.setValidationPM25 = self.setTrainingPM25[idxSegment:,:]
-		self.setTrainingPM25 = self.setTrainingPM25[:idxSegment,:]
-
 		#print (self.setTrainingPM25.shape)
 		#print (self.setValidationPM25.shape)
 		#print (self.setTraining.shape)
 		#print (self.setValidation.shape)
-		'''
+		
 		print ("Initialize Complete!")
 
 	def sort_training_data(self):
-		csvData = self.setTraining
-		#set NR 'No Rainfall' to 0
-		#Copy data and convert NR to 0
-		idxNans = np.isnan(csvData)
-		csvData[idxNans] = 0
-		
-		#csvData = csvData.clip(min=0)
-		#Reorganize into an 18xN array
-		csvData = np.vsplit(csvData,csvData.shape[0]/18)
-		csvData = np.concatenate(csvData,1)
-		pm25Data = csvData
-		#print(csvData.shape)
-		#Pick selected features
-		#np.savetxt("csvFinal2.csv", csvData.T,fmt="%s", delimiter=","), 
-		csvData = csvData
+		#read test_data file
+		# This is an array which will be the shape of (5652, 163) and be returned.
+		setX = np.array([]).reshape(0,len(self.idxFeatures)*len(self.rangeHours))
+		pm25 = np.array([]).reshape(0,(24*20-9)*12)
 
-		idxStart = 0;		
-		idxEnd = 9;
-		csvFinal = np.array([]).reshape(0,self.numWeights)
-		pm25 = csvFinal
-		a = np.arange(9)
-		while (idxEnd < csvData.shape[0]-1):
-			for idxRow in self.idxFeatures:
-				csvTmp = csvData[idxRow, idxStart:idxEnd]
-				csvFinal = np.append(csvFinal,csvTmp)
-				
-				#print(csvFinal)
-			print(csvFinal)
-			return 0,1
-			'''
-			csvFinal = np.vstack((csvFinal,csvTmp))
-			pm25 = np.append(pm25,pm25Data[idxEnd,9])
-			if ((idxEnd+1)%480 == 0):
-				#print(idxStart, idxEnd)
+		for months in range(12):
+		    for hours in range(self.rangeHours[0],24*20-len(self.rangeHours)):
+		        temp = self.setTraining[self.idxFeatures[:,None],hours+months*480:hours+months*480+len(self.rangeHours)].\
+		        flatten().reshape(1,len(self.idxFeatures)*len(self.rangeHours))
+		        setX = np.vstack((setX,temp))#(5652,162)
 
-				idxStart = idxEnd + 1
-				idxEnd = idxStart + 9
-				#print(idxStart, idxEnd)
-
-			else:
-				idxStart +=1
-				idxEnd +=1
-		#pm25 = csvData[,9]
-		#outputs 5652,162
-		#print(csvFinal)
-		print (csvFinal.shape)
-		print(pm25.shape)
-		pm25 = pm25.reshape(pm25.shape[0],1)
-		#print(pm25.shape)
-
-		np.savetxt("csvFinal.csv", csvFinal,fmt="%s", delimiter=","), 
-		return csvFinal, pm25 #[5651, 153] [5631, 1]
-		'''
-		return 0,1
+		#Append the correct pm25 value to train_x_set
+		for months in range(12):
+			pm25 = np.append(pm25, self.setTraining[9,9+months*480:480+months*480])
+		pm25 = pm25.reshape(setX.shape[0],1)#(5652,1)
+		setTraining = np.append(setX,pm25,axis = 1)#(5652,163)
+		#np.savetxt("outputSetX.csv", setX,fmt="%s", delimiter=","), 
+		return setTraining
 
 	def sort_testing_data(self):
-		csvData = self.setTesting
-		idxNans = np.isnan(csvData)
-		csvData[idxNans] = 0
-		#Reorganize into an Nx18 array
-		csvData = np.vsplit(csvData,csvData.shape[0]/18)
-		csvData = np.concatenate(csvData,1)
-		pm25Data = csvData.T
-		#Pick selected features
-		csvData = csvData[self.idxFeatures,:]
-		csvData = csvData.T
-		
+		setTest = self.setTesting[self.idxFeatures[:,None],self.rangeHours].flatten().reshape(1,len(self.idxFeatures)*len(self.rangeHours))
+		for days in range(1,12*20):
+			setTest = np.vstack((setTest,self.setTesting[self.idxFeatures[:,None],self.rangeHours+days*9].flatten()))
+
+		return setTest
 
 
-		idxStart = 0;		
-		idxEnd = 9;
-		csvFinal = np.array([]).reshape(0,self.numWeights)
-		pm25 = csvFinal
-
-		while (idxEnd < csvData.shape[0]-1):
-			csvTmp = csvData[idxStart:idxEnd,:].reshape(1,self.numWeights)
-			csvFinal = np.vstack((csvFinal,csvTmp))
-			pm25 = np.append(pm25,pm25Data[idxEnd,9])
-			if ((idxEnd+1)%480 == 0):
-				idxStart = idxEnd + 1
-				idxEnd = idxStart + 9
-
-			else:
-				idxStart +=1
-				idxEnd +=1
-		#pm25 = csvData[,9]
-		#outputs 5652,162
-
-		pm25 = pm25.reshape(pm25.shape[0],1)
-
-		return csvFinal, pm25
 
 	def cost_fcn(self):
 		'''
@@ -168,17 +100,17 @@ class LineGradDesc:
 		takes form of the following:
 		L(f) = sum (y_n - y) where y is a linear line
 		'''
-		setTrain = self.setTraining
-		setTrainPM25 = self.setTrainingPM25
+		setTrain = self.setTraining[:,:-1]
 
-		setValidationPM25 = self.setValidationPM25
-		setValidation = self.setValidation
-
+		setValidation = self.setValidation[:,:-1]
+		
 		yTrain= setTrain.dot(self.weights) + self.bias
+
 		yValid = setValidation.dot(self.weights) + self.bias
 
-		lossTrain = self.rmse(setTrainPM25, yTrain)
-		lossValid = self.rmse(setValidationPM25, yValid)
+		lossTrain = self.rmse(self.setTraining[:,-1], yTrain)
+		lossValid = self.rmse(self.setValidation[:,-1], yValid)
+
 		return lossTrain, lossValid
 		
 	def rmse(self, actual, predicted):
@@ -188,7 +120,7 @@ class LineGradDesc:
 			sumError += (predictionError ** 2)
 		
 		error = (sumError / float(len(actual))) 
-		#error = error ** 0.5
+		error = error ** 0.5
 		return error
 
 	def norm_features(self, setInput):
@@ -200,14 +132,18 @@ class LineGradDesc:
 		'''
 		meanI = []
 		stDevI = []
-		setNorm = setInput
+		setNorm = setInput[:,:-1]
 
-		for idx in range(setInput.shape[1]):
-			tmpMean = np.nanmean(setInput[:, idx])
-			tmpStDev = np.nanstd(setInput[:, idx])
+		for idx in range(setNorm.shape[1]):
+			tmpMean = np.nanmean(self.setTraining[:, idx])
+			tmpStDev = np.nanstd(self.setTraining[:, idx])
 			meanI.append(tmpMean)
 			stDevI.append(tmpStDev)
-			setNorm[:,idx] = ((setInput[:,idx] - tmpMean)/ tmpStDev)
+			setNorm[:,idx] = ((setNorm[:,idx] - tmpMean)/ tmpStDev)
+
+		setNorm = np.append(setNorm,self.setTraining[:,-1].\
+			reshape(self.setTraining.shape[0],1),1)
+
 		return setNorm, meanI, stDevI
 
 	def adagrad(eta,time):
@@ -221,17 +157,16 @@ class LineGradDesc:
 		self.eta = eta;
 		self.iterations = iterations
 		
-		yActual = self.setTrainingPM25
-		
-		X = self.setTraining 
 		dwTotal = 1
 		dbTotal = 1
 		valid_loss_error = 0
 		train_loss_error = 0
+
 		for idx in range(1,iterations+1):
 			dw = 0
 			db = 0
-			
+			X = self.setTraining[:,:-1].reshape(self.setTraining.shape[0],self.setTraining.shape[1]-1)#(4521,162)
+			yActual = self.setTraining[:,-1].reshape(self.setTraining.shape[0],1)#(4521,1)
 
 			yPredict = X.dot(self.weights) + self.bias
 
@@ -266,6 +201,9 @@ class LineGradDesc:
 		return 0
 
 	def run_test_set(self):
+		#print(self.meanTraining.shape)
+		#print(self.stDevTraining.shape)
+		#print(self.setTesting.shape)
 		setTesting = ((self.setTesting-self.meanTraining)/self.stDevTraining)
 		prediction = setTesting.dot(self.weights)+self.bias
 
