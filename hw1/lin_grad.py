@@ -8,8 +8,7 @@
 
 import sys
 import numpy as np
-import matplotlib.pyplot as mpl
-import time
+#import matplotlib.pyplot as mpl
 
 #adjust print options to terminal
 np.set_printoptions(linewidth=1e3, edgeitems=1e10)
@@ -200,20 +199,20 @@ class LineGradDesc:
 			#sum up total errors
 			dwTotal += diffWeight**2
 			dbTotal += diffBias**2
-
-			coeffLamba = 0.5
 			
+			coeffLamba = 0.5
+
 			#update weights
 			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (coeff * self.weights)
 			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
-			errorValid, errorTrain = self.cost_fcn()
-			arrayValidError = np.append(arrayValidError, errorValid)
-			arrayTrainingError = np.append(arrayTrainingError, errorTrain)
+			
+
 			#print training and validation losses
 			if idx%1000 == 0 or idx == 1:
-				
+				errorValid, errorTrain = self.cost_fcn()
 				print ("Iterations: %d Valid cost: %f Train cost: %f" % (idx,errorValid,errorTrain))
-			
+				arrayValidError = np.append(arrayValidError, errorValid)
+				arrayTrainingError = np.append(arrayTrainingError, errorTrain)
 		print("Descent Complete!")
 		return arrayValidError, arrayTrainingError
 

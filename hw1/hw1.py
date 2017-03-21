@@ -8,8 +8,8 @@
 
 import sys
 import numpy as np
-import matplotlib.pyplot as mpl
-import time
+#import matplotlib.pyplot as mpl
+
 from lin_grad import LineGradDesc
 #from GradientDescent import GradDesc
 
@@ -18,7 +18,7 @@ from lin_grad import LineGradDesc
 # 2  	CO 				11	X	RH (Rel. Humidity)
 # 3  	NMHC			12	X	SO2
 # 4  X	NO 				13 		THC
-# 5  	NO2 			14 		WD_HR
+# 5  	NO2 			14 	X	WD_HR
 # 6  	NOx 			15	O	WIND_DIRECT
 # 7  	O3				16	O	WIND_SPEED
 # 8  O	PM10			17 		WS_HR
@@ -50,36 +50,72 @@ setTest[setTest == "NR"] = 0
 setTest = setTest.astype(np.float)#(18,2160)
 
 #Feature selection and time range
-#features = np.array([9])
-#features = np.arange(18)
+#feature1 = np.array([9])
+#featureAll = np.arange(18)
 #features = np.array([8,9,10,16]) 5.72 5.9, 6.19
 #features = np.array([8,9,10,16]) #5.89221 5,86 6.17
 #features = np.array([4,5,6,8,9,10,16])
 #features = np.array([8,9,10,16]) #5.78
 #features = np.array([4,8,9,10,16])
-#features = np.array([9,10,12,16])
-features = np.array([0,8,9,10,15,16])
+#feature10 = np.array([0,4,5,6,7,8,9,10,12,14,15,16,17])
+#feature4 = np.array([9,10,12,16])
+feature6 = np.array([8,9,10,14,15,16])
+#featureIndex = [feature1,featureAll,feature4,feature6,feature10]
+
 hours = np.arange(9)
 print ("Initializing")
-iterations = 200;
-learning_rate = 5
+#iterations = [100,500]
+#lr = [0.001,0.01,0.1,1,10,100]
+#markerIndex = ['s', 'o','v','p','d']
+#colorIndex = ['r','b','g','k','c']
+#learningIndex = [0.01,0.1,1,10,100]
+#orderIndex = [1,2,3]
 #Run Gradient Descent
-mpl.figure(1)
-lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.20) 
-errorValid, errorTraining = lineGrad.grad_desc(iterations, learning_rate)
-lineGrad.run_test_set()
+#mpl.figure(1)
+#print(len(featureIndex))
+lineGrad = LineGradDesc(setTrain, setTest , feature6, hours, 0.20) 
+errorValid, errorTraining = lineGrad.grad_desc(100000, 0.5)
+'''
+for idx in range(len(orderIndex)):
+	#idxIteration = iterations[idx]
+	idxIteration = 5000
+	idxMarker = markerIndex[idx]
+	idxColor = colorIndex[idx]
+	idxLR = learningIndex[idx]
+	idxFeature = featureIndex[3]
+	idxOrder = orderIndex[idx]
+	print idxFeature
+	lineGrad = LineGradDesc(setTrain, setTest , idxFeature, hours, 0.20,idxOrder) 
+	errorValid, errorTraining = lineGrad.grad_desc(idxIteration, 0.3)
+	arrayIter = np.arange(idxIteration)
 
-arrayIter = np.arange(iterations)
-mpl.figure(1)
-mpl.plot(arrayIter, errorValid, color = 'r',label='Validation Error')
-mpl.plot(arrayIter, errorTraining, color = 'b', label='Training Error')
+	idxLabel = "iter " + str(idx)
+	
+	mpl.figure(1)
+	mpl.plot(arrayIter, errorValid, color = idxColor,label=idxLabel)
+	mpl.title('Validation Error vs Iterations', fontsize=20)
+	mpl.xlabel('Iterations', fontsize=18)
+	mpl.ylabel('Validation Error', fontsize=16)
+	mpl.legend()
 
-mpl.title('Validation Error vs Iterations', fontsize=20)
-mpl.xlabel('Iterations', fontsize=18)
-mpl.ylabel('Validation Error', fontsize=16)
-mpl.legend()
+	mpl.figure(2)
+	mpl.plot(arrayIter, errorTraining, color = idxColor, label=idxLabel)
+	mpl.title('Training Error vs Iterations', fontsize=20)
+	mpl.xlabel('Iterations', fontsize=18)
+	mpl.ylabel('Training Error', fontsize=16)
+	mpl.legend()
+
+	diffError = errorValid - errorTraining
+	mpl.figure(3)
+	mpl.plot(arrayIter, diffError, color = idxColor, label=idxLabel)
+	mpl.title('Difference in Training and Validation Error', fontsize=20)
+	mpl.xlabel('Iterations', fontsize=18)
+	mpl.ylabel('Error', fontsize=16)
+	mpl.legend()
 mpl.show()
-mpl.savefig('./data/ErrorTable.jpg')
+'''
+
+lineGrad.run_test_set()
 #Not implemented
 #lineGrad.random()
 #lineGrad.neural_network(2000,0.1)
