@@ -1,14 +1,14 @@
 # Machine Learning 2017
 # Homework 1: 	Linear Regression
-# Instructor: 	李宏毅 (Hung-yi Lee)
-# Student: 		邱名彦 / Michael Chiou
+# Instructor: 	Hung-yi Lee
+# Student: 		Michael Chiou
 # Student ID: 	R05921086
 # Email:		r05921086.ntu.edu.tw 
 # Github: 		https://github.com/jastion/ML2017.git
 
 import sys
 import numpy as np
-import matplotlib as mpl
+import matplotlib.pyplot as mpl
 import time
 
 #adjust print options to terminal
@@ -28,10 +28,13 @@ class LineGradDesc:
 		self.setTraining = inputTraining #Training Data set
 		self.setTesting = inputTest #Testing Set
 
+
+		mu = 0
+		sigma = 0.2
 		#Initialize Number of Features,  Weights, Bias
 		self.numWeights = len(self.idxFeatures) * len(self.rangeHours) 
-		self.weights = np.random.rand(self.numWeights,1) 
-		self.bias = np.random.rand(1,1)
+		self.weights = sigma* np.random.rand(self.numWeights,1) + mu 
+		self.bias = sigma * np.random.rand(1,1) + mu
 
 		#Preprocess and Sort Training and Testing Data 
 		self.setTraining = self.sort_training_data()
@@ -119,8 +122,18 @@ class LineGradDesc:
 		
 		error = (sumError / float(len(actual))) 
 		error = error ** 0.5
-		return error
+		'''
+		if flagReg == 1:
+			print("regularization")
+			weightI = np.sum(self.weights) ** 0.5
+			errorReg  = coeff * weightI
+			errorTotal = errorReg + error 
+			return errorTotal
 
+		else:
+			return error
+		'''
+		return error
 	def norm_features(self, setInput):
 		'''
 		Returns a normalized version of X. Normalized X is calculated as follows
@@ -143,13 +156,6 @@ class LineGradDesc:
 
 		return setNorm, meanI, stDevI
 
-	def adagrad(eta,time):
-		etaNew = eta
-		return etaNew
-
-	def regularization():
-		return 0
-
 	def grad_desc(self, iterations, eta):
 		self.eta = eta; #learning rate
 		self.iterations = iterations #number of iterations
@@ -157,8 +163,9 @@ class LineGradDesc:
 		#Initialize variables
 		dwTotal = 1 #total weight differential
 		dbTotal = 1 #total bias differential
-		valid_loss_error = 0 #Validation error
-		train_loss_error = 0 #Training error
+		arrayValidError = np.array([]) #Validation error
+		arrayTrainingError = np.array([])#Training error
+
 
 		np.random.seed(1)
 		#Get training data without truth values (last row)
@@ -167,7 +174,11 @@ class LineGradDesc:
 		#Get truth values for trianing data
 		yActual = self.setTraining[:,-1].reshape(self.setTraining.shape[0],1)#(4521,1)
 		
+
+		#lambdas = [0.5]
 		#Iterate through gradient descent
+		#for coeff in lambdas:
+		#print (coeff)
 		for idx in range(1,iterations+1):
 			# Equation: y = b + sum(weights * X)
 			dw = 0 #weight derivative
@@ -189,17 +200,22 @@ class LineGradDesc:
 			#sum up total errors
 			dwTotal += diffWeight**2
 			dbTotal += diffBias**2
-			#update weights
-			self.weights += (eta * diffWeight)/np.sqrt(dwTotal)
-			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
 
+			coeffLamba = 0.5
+			
+			#update weights
+			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (coeff * self.weights)
+			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
+			errorValid, errorTrain = self.cost_fcn()
+			arrayValidError = np.append(arrayValidError, errorValid)
+			arrayTrainingError = np.append(arrayTrainingError, errorTrain)
 			#print training and validation losses
 			if idx%1000 == 0 or idx == 1:
-				errorValid, errorTrain = self.cost_fcn()
-				print ("Iterations: %d Valid cost: %f Train cost: \
-				 %f" %(idx,errorValid,errorTrain))
+				
+				print ("Iterations: %d Valid cost: %f Train cost: %f" % (idx,errorValid,errorTrain))
+			
 		print("Descent Complete!")
-		return 0
+		return arrayValidError, arrayTrainingError
 
 	def run_test_set(self):
 		#Runs test set on trained weights

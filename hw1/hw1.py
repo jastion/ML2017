@@ -1,19 +1,19 @@
 # Machine Learning 2017
 # Homework 1: 	Linear Regression
-# Instructor: 	李宏毅 (Hung-yi Lee)
-# Student: 		邱名彦 / Michael Chiou
+# Instructor: 	Hung-yi Lee
+# Student: 		Michael Chiou
 # Student ID: 	R05921086
 # Email:		r05921086.ntu.edu.tw 
 # Github: 		https://github.com/jastion/ML2017.git
 
 import sys
 import numpy as np
-import matplotlib as mpl
+import matplotlib.pyplot as mpl
 import time
 from lin_grad import LineGradDesc
 #from GradientDescent import GradDesc
 
-# 0  	AMB_TEMP		9	O	PM2.5  
+# 0  X	AMB_TEMP		9	O	PM2.5  
 # 1  	CH4				10	O	RAINFALL
 # 2  	CO 				11	X	RH (Rel. Humidity)
 # 3  	NMHC			12	X	SO2
@@ -58,16 +58,13 @@ setTest = setTest.astype(np.float)#(18,2160)
 #features = np.array([8,9,10,16]) #5.78
 #features = np.array([4,8,9,10,16])
 #features = np.array([9,10,12,16])
-features = np.array([8,9,10,15,16])
+features = np.array([0,8,9,10,15,16])
 hours = np.arange(9)
 print ("Initializing")
-
+iterations = 200;
+learning_rate = 5
 #Run Gradient Descent
-lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.2) 
-lineGrad.grad_desc(100000, 1000)
+mpl.figure(1)
+lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.20) 
+errorValid, errorTraining = lineGrad.grad_desc(iterations, learning_rate)
 lineGrad.run_test_set()
-
-#Not implemented
-#lineGrad.random()
-#lineGrad.neural_network(2000,0.1)
-#lineGrad.test_nn()
