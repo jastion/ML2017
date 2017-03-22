@@ -16,7 +16,7 @@ np.set_printoptions(linewidth=1e3, edgeitems=1e10)
 class LineGradDesc:
 	#This class contains functions to perform Gradient
 	def __init__(self, inputTraining, inputTest, \
-		inputFeatures,inputHours,inputVerify,):
+		inputFeatures,inputHours,inputVerify,inputOrder, inputReg):
 		#Initializes Linear Gradient Descent Class
 		#Preprocesses and sorts necessary data
 		
@@ -26,6 +26,8 @@ class LineGradDesc:
 		self.percentVerify = inputVerify #% of data to store as Validation
 		self.setTraining = inputTraining #Training Data set
 		self.setTesting = inputTest #Testing Set
+		self.order = inputOrder
+		self.reg = inputReg
 
 
 		mu = 0
@@ -158,7 +160,7 @@ class LineGradDesc:
 	def grad_desc(self, iterations, eta):
 		self.eta = eta; #learning rate
 		self.iterations = iterations #number of iterations
-
+		coeff = self.reg
 		#Initialize variables
 		dwTotal = 1 #total weight differential
 		dbTotal = 1 #total bias differential
@@ -184,7 +186,7 @@ class LineGradDesc:
 			db = 0 #bias derivative
 
 			#calculate prediction
-			yPredict = X.dot(self.weights) + self.bias
+			yPredict = (X**self.order).dot(self.weights) + self.bias
 			#Determine error
 			deltaError = yPredict - yActual
 
@@ -203,16 +205,17 @@ class LineGradDesc:
 			coeffLamba = 0.5
 
 			#update weights
-			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (coeff * self.weights)
+			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) - (2 * coeff * self.weights)
 			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
-			
-
+			errorValid, errorTrain = self.cost_fcn()
+			arrayValidError = np.append(arrayValidError, errorValid)
+			arrayTrainingError = np.append(arrayTrainingError, errorTrain)
 			#print training and validation losses
 			if idx%1000 == 0 or idx == 1:
-				errorValid, errorTrain = self.cost_fcn()
+				#errorValid, errorTrain = self.cost_fcn()
 				print ("Iterations: %d Valid cost: %f Train cost: %f" % (idx,errorValid,errorTrain))
-				arrayValidError = np.append(arrayValidError, errorValid)
-				arrayTrainingError = np.append(arrayTrainingError, errorTrain)
+				#arrayValidError = np.append(arrayValidError, errorValid)
+				#arrayTrainingError = np.append(arrayTrainingError, errorTrain)
 		print("Descent Complete!")
 		return arrayValidError, arrayTrainingError
 
@@ -237,6 +240,10 @@ class LineGradDesc:
 		np.savetxt("./data/test_output.csv", csvOutput, delimiter=",", fmt = "%s")
 
 		print("Save Complete!")
+
+
+
+
 
 	def sigmoid(self,x):
 		#Equation: 1/(1+e^-t)
