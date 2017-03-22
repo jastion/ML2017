@@ -6,6 +6,8 @@
 # Email:		r05921086.ntu.edu.tw 
 # Github: 		https://github.com/jastion/ML2017.git
 
+#features = np.array([8,9,10,15,16])
+
 import sys
 import numpy as np
 import matplotlib.pyplot as mpl
@@ -14,7 +16,7 @@ from lin_grad import LineGradDesc
 #from GradientDescent import GradDesc
 
 # 0  X	AMB_TEMP		9	O	PM2.5  
-# 1  	CH4				10	O	RAINFALL
+# 1  X	CH4				10	O	RAINFALL
 # 2  	CO 				11	X	RH (Rel. Humidity)
 # 3  	NMHC			12	X	SO2
 # 4  X	NO 				13 		THC
@@ -24,8 +26,8 @@ from lin_grad import LineGradDesc
 # 8  O	PM10			17 		WS_HR
 
 
-np.set_printoptions(linewidth=1e3, edgeitems=1e2, suppress=True,precision=3)
-
+#np.set_printoptions(linewidth=1e3, edgeitems=1e2, suppress=True,precision=3)
+start = time.time()
 #Read in Training Data and preprocess
 csvTraining  = np.genfromtxt(sys.argv[1], dtype="S", skip_header=True, delimiter = ",")
 csvTraining = csvTraining[:,3:] 
@@ -58,28 +60,20 @@ setTest = setTest.astype(np.float)#(18,2160)
 #features = np.array([8,9,10,16]) #5.78
 #features = np.array([4,8,9,10,16])
 #features = np.array([9,10,12,16])
-features = np.array([0,8,9,10,15,16])
+features = np.array([8,9,10,14,15,16])
+#features = np.array([9])
 hours = np.arange(9)
 print ("Initializing")
-iterations = 200;
-learning_rate = 5
+iterations = 200000;
+learning_rate = 0.2
 #Run Gradient Descent
 mpl.figure(1)
+mpl.plot(x,y) 
 lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.20) 
 errorValid, errorTraining = lineGrad.grad_desc(iterations, learning_rate)
 lineGrad.run_test_set()
-
-arrayIter = np.arange(iterations)
-mpl.figure(1)
-mpl.plot(arrayIter, errorValid, color = 'r',label='Validation Error')
-mpl.plot(arrayIter, errorTraining, color = 'b', label='Training Error')
-
-mpl.title('Validation Error vs Iterations', fontsize=20)
-mpl.xlabel('Iterations', fontsize=18)
-mpl.ylabel('Validation Error', fontsize=16)
-mpl.legend()
-mpl.show()
-mpl.savefig('./data/ErrorTable.jpg')
+end = time.time()
+print(end-start)
 #Not implemented
 #lineGrad.random()
 #lineGrad.neural_network(2000,0.1)

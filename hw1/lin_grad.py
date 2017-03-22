@@ -29,8 +29,8 @@ class LineGradDesc:
 		self.setTesting = inputTest #Testing Set
 
 
-		mu = 0
-		sigma = 0.2
+		mu = -1
+		sigma = 0.5
 		#Initialize Number of Features,  Weights, Bias
 		self.numWeights = len(self.idxFeatures) * len(self.rangeHours) 
 		self.weights = sigma* np.random.rand(self.numWeights,1) + mu 
@@ -206,12 +206,10 @@ class LineGradDesc:
 			#update weights
 			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (coeff * self.weights)
 			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
-			errorValid, errorTrain = self.cost_fcn()
-			arrayValidError = np.append(arrayValidError, errorValid)
-			arrayTrainingError = np.append(arrayTrainingError, errorTrain)
+			
 			#print training and validation losses
 			if idx%1000 == 0 or idx == 1:
-				
+				errorValid, errorTrain = self.cost_fcn()
 				print ("Iterations: %d Valid cost: %f Train cost: %f" % (idx,errorValid,errorTrain))
 			
 		print("Descent Complete!")
