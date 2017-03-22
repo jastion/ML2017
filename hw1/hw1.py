@@ -18,12 +18,12 @@ from lin_grad import LineGradDesc
 # 0  X	AMB_TEMP		9	O	PM2.5  
 # 1  X	CH4				10	O	RAINFALL
 # 2  	CO 				11	X	RH (Rel. Humidity)
-# 3  	NMHC			12	X	SO2
+# 3  X	NMHC			12	X	SO2
 # 4  X	NO 				13 		THC
-# 5  	NO2 			14 		WD_HR
+# 5  	NO2 			14 	X	WD_HR
 # 6  	NOx 			15	O	WIND_DIRECT
 # 7  	O3				16	O	WIND_SPEED
-# 8  O	PM10			17 		WS_HR
+# 8  O	PM10			17 	X	WS_HR
 
 
 #np.set_printoptions(linewidth=1e3, edgeitems=1e2, suppress=True,precision=3)
@@ -60,15 +60,13 @@ setTest = setTest.astype(np.float)#(18,2160)
 #features = np.array([8,9,10,16]) #5.78
 #features = np.array([4,8,9,10,16])
 #features = np.array([9,10,12,16])
-features = np.array([8,9,10,14,15,16])
+features = np.array([8,9,10,15,16])
 #features = np.array([9])
-hours = np.arange(9)
-print ("Initializing")
-iterations = 200000;
+hours = np.arange(9) 
+
+iterations = 300000;
 learning_rate = 0.2
 #Run Gradient Descent
-mpl.figure(1)
-mpl.plot(x,y) 
 lineGrad = LineGradDesc(setTrain, setTest , features, hours, 0.20) 
 errorValid, errorTraining = lineGrad.grad_desc(iterations, learning_rate)
 lineGrad.run_test_set()

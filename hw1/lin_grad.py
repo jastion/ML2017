@@ -63,7 +63,6 @@ class LineGradDesc:
 	def sort_training_data(self):
 		#Initializes variables to store sorted training data 
 		#PM2.5 truth values will be appended as the last row to setTraining
-		#This is an array which will be the shape of (5652, 163).
 		setX = np.array([]).reshape(0,len(self.idxFeatures)*len(self.rangeHours))
 		pm25 = np.array([]).reshape(0,(24*20-9)*12)
 
@@ -74,15 +73,16 @@ class LineGradDesc:
 		        temp = self.setTraining[self.idxFeatures[:,None],hours+months\
 		        *480:hours+months*480+len(self.rangeHours)].\
 		        flatten().reshape(1,len(self.idxFeatures)*len(self.rangeHours))
-		        setX = np.vstack((setX,temp))#(5652,162)
+		        setX = np.vstack((setX,temp))
 
 		#Append the PM25 truth value to train_x_set
 		for months in range(12):
 			pm25 = np.append(pm25, self.setTraining[len(self.rangeHours),\
 				len(self.rangeHours)+months*480:480+months*480])
-		pm25 = pm25.reshape(setX.shape[0],1)#(5652,1)
 
-		setTraining = np.append(setX,pm25,axis = 1)#(5652,163)
+		pm25 = pm25.reshape(setX.shape[0],1)
+
+		setTraining = np.append(setX,pm25,axis = 1)
 		return setTraining
 
 	def sort_testing_data(self):
@@ -122,17 +122,7 @@ class LineGradDesc:
 		
 		error = (sumError / float(len(actual))) 
 		error = error ** 0.5
-		'''
-		if flagReg == 1:
-			print("regularization")
-			weightI = np.sum(self.weights) ** 0.5
-			errorReg  = coeff * weightI
-			errorTotal = errorReg + error 
-			return errorTotal
 
-		else:
-			return error
-		'''
 		return error
 	def norm_features(self, setInput):
 		'''
@@ -204,7 +194,7 @@ class LineGradDesc:
 			coeffLamba = 0.5
 			
 			#update weights
-			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (coeff * self.weights)
+			self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (2 * coeff * self.weights)
 			self.bias += (eta * diffBias)/np.sqrt(dbTotal)
 			
 			#print training and validation losses
@@ -233,7 +223,7 @@ class LineGradDesc:
 		#Write data to CSV
 		np.savetxt("./data/w_pm25.csv", self.weights, delimiter = ",", fmt = "%s")
 		np.savetxt("./data/b_pm25.csv", self.bias, delimiter = ",", fmt = "%s")
-		np.savetxt("./data/test_output.csv", csvOutput, delimiter=",", fmt = "%s")
+		np.savetxt(sys.argv[3], csvOutput, delimiter=",", fmt = "%s")
 
 		print("Save Complete!")
 
