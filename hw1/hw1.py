@@ -5,7 +5,7 @@
 # Student ID: 	R05921086
 # Email:		r05921086.ntu.edu.tw 
 # Github: 		https://github.com/jastion/ML2017.git
-
+# Python 2.7
 #features = np.array([8,9,10,15,16])
 
 import sys
