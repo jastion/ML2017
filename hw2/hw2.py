@@ -7,3 +7,74 @@
 # Github: 		https://github.com/jastion/ML2017.git
 # Python 2.7
 
+'''
+age,  O
+workclass, 
+fnlwgt, 
+education, O 
+education num, 
+marital-status, O
+occupation O
+relationship, 
+race,
+sex,
+capital-gain, O?
+capital-loss, 
+hours-per-week, O?
+native-country, 
+make over 50K a year or not
+
+""
+>50K, <=50K.
+
+age: continuous.
+workclass: Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked.
+fnlwgt: continuous.
+education: Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool.
+education-num: continuous.
+marital-status: Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse.
+occupation: Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces.
+relationship: Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried.
+race: White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black.
+sex: Female, Male.
+capital-gain: continuous.
+capital-loss: continuous.
+hours-per-week: continuous.
+native-country: United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands.
+
+https://archive.ics.uci.edu/ml/datasets/Adult
+http://www.mis.nsysu.edu.tw/db-book/DMProject2007Spring/6/project.pdf
+https://github.com/CommerceDataService/tutorial-predicting-income/blob/master/predicting_income_with_census_data_pt1.md
+http://scg.sdsu.edu/dataset-adult_r/
+'''
+names = [
+    'age',
+    'workclass',
+    'fnlwgt',
+    'education',
+    'education-num',
+    'marital-status',
+    'occupation',
+    'relationship',
+    'race',
+    'sex',
+    'capital-gain',
+    'capital-loss',
+    'hours-per-week',
+    'native-country',
+    'income',
+]
+
+import pandas as pd 
+import numpy as np
+import sys
+
+print("HERE")
+print (sys.argv[1])
+#csvData  = np.genfromtxt(sys.argv[1], dtype="S", skip_header=True, delimiter = ",")
+#print(csvData)
+data = pd.read_csv(sys.argv[1], sep="\s*",names=names)
+print(data)
+#length = csvData[:,csvData=="?"]
+
+
