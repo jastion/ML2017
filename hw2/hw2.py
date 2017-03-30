@@ -68,29 +68,49 @@ names = [
     'income',
 ]
 '''
+'''
+age,  O
+education, O 
+marital-status, O
+occupation O
+capital-gain, O?
+hours-per-week, O?
+'''
+
 import pandas as pd 
 import numpy as np
 import sys
 import feature_classification as fc
+import logistic as log
 
-
-print(sys.argv[4])
+#marital-status, O
+#occupation O
+print(sys.argv)
 #X Train
 setTraining  = np.genfromtxt(sys.argv[3], dtype="float", skip_header=True, delimiter = ",")
 #X_Test
 setTesting  = np.genfromtxt(sys.argv[5], dtype="float", skip_header=True, delimiter = ",")
-print(sys.argv[6])
-setTraining = fc.sort_ranges(setTraining)
-setTraining = fc.sort_data(setTraining)
 
-setTesting = fc.sort_ranges(setTesting)
-setTesting = fc.sort_data(setTesting)
+
+
+#setTraining = fc.cut_data(setTraining)
+#setTesting = fc.cut_data(setTesting)
 
 setAns = np.genfromtxt(sys.argv[4], dtype="float", skip_header=False, delimiter = ",")
+setAns = setAns.reshape(setAns.shape[0],1)
+#setTraining = fc.sort_capital(setTraining)
+#setTesting = fc.sort_capital(setTesting)
+#for i in range(3):
+test = log.LogDesc(setTraining,setAns, setTesting,0.05)
+test.train_logistic(1001,0.2)
+test.run_log_model()
+
 #lineGrad = LineGradDesc(setTraining, setTesting, 0.20) 
 
 
-np.savetxt(sys.argv[6], setTraining, delimiter = ",", fmt = "%s")
+#np.savetxt("new_testing_data.csv", setTesting, delimiter = ",", fmt = "%s")
+#np.savetxt("new_training_data.csv", setTraining, delimiter = ",", fmt = "%s")
+#np.savetxt(sys.argv[6], setTraining, delimiter = ",", fmt = "%s")
 
 
 
