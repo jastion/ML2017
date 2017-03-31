@@ -34,9 +34,10 @@ class LogDesc:
 		#self.meanTraining = meanI
 		#self.stDevTraining = stDevI
 
-		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
 
+		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
 		#Shuffle data
+		np.random.seed(1)
 		np.random.shuffle(self.setTraining)
 
 		#Get total number of available data points
@@ -45,6 +46,7 @@ class LogDesc:
 		idxSegment = numData - int(numData*self.percentValidate)
 		#print (idxSegment)
 		#print(idxSegment)
+		print(idxSegment)
 		#Segments total training data into validation and training data sets
 		self.setValidation = self.setTraining[idxSegment:,:]
 		self.setTraining = self.setTraining[:idxSegment,:]
@@ -96,6 +98,9 @@ class LogDesc:
 		#d = zeros(shape=(X.shape))
 		den = 1.0 + np.exp(-1.0 * X)
 		output = 1.0 / den
+		if np.isnan(output).any():
+			print("NAN FOUND NAN FOUND NAN FOUND NAN FOUND NAN FOUND ")
+			return -1
 		#check for Nan?
 		return np.clip(output,0.000000000000000001,0.99999999999999999999999)
 
@@ -107,11 +112,20 @@ class LogDesc:
 
 	def bound_prediction(self,prediction):
 		boundary = np.mean(prediction)
+		#print("Boundary: " + str(boundary))
+		'''
+		ans = prediction
+		for i in range(len(ans)):
+			if ans[i] >= (1.0-boundary):
+				ans[i] = 1
+			else:
+				ans[i] = 0
+		'''
 		#print(prediction[0:5])
 		ans = np.rint(prediction)
 		#print(ans[0:5])
 		return ans
-	def train_logistic(self,iteration, eta):
+	def train_logistic(self,iteration, eta,lambdaC):
 		#normalize??
 		inputData = self.setTraining[:,:-1]
 		inputAns = self.setTraining[:,-1]
@@ -140,7 +154,7 @@ class LogDesc:
 			dwTotal += tmpWeight ** 2
 			dbTotal += tmpBias ** 2
 
-			self.w -= (eta*tmpWeight.T)/np.sqrt(dwTotal).T
+			self.w -= ((eta*tmpWeight.T)+((lambdaC/2)*dwTotal.T))/np.sqrt(dwTotal).T
 			self.b -= (eta*tmpBias)/np.sqrt(dbTotal)
 
 			ansTraining = self.bound_prediction(prediction)
@@ -149,12 +163,12 @@ class LogDesc:
 			#self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (2 * coeff * self.weights)
 			#self.bias += (eta * diffBias)/np.sqrt(dbTotal)
 
-			if (idx % 1000) == 0:
+			if (idx % 100) == 0:
 				loss = self.compute_cost(ansTraining,inputAns)
 				lossValid = self.compute_cost(ansValid, inputValidAns)
 				print ("It: %d  Train Acc: %f Valid Acc: %f" \
 					% (idx,loss,lossValid))
-
+				#print((lambdaC/2)*dwTotal.T)
 		print("training done!")
 		return 0
 
@@ -175,11 +189,13 @@ class LogDesc:
 		for idx in range (16281):
 			csvOutput[idx+1,0] = str(idx+1)
 			csvOutput[idx+1,1] = int(finalPrediction[idx,0])
-		filename = "log_output_"+time.strftime("%Y%m%d-%H%M%S")+".csv"
-
+		timestamp = time.strftime("%Y%m%d-%H%M%S")
+		filename = "./results/log_output_"+timestamp+".csv"
+		weightName = "./results/log_weight_"+timestamp+".csv"
+		biasName = "./results/log_bias_"+timestamp+".csv"
 		#Write data to CSV
-		np.savetxt("w_pm25.csv", self.w, delimiter = ",", fmt = "%s")
-		np.savetxt("b_pm25.csv", self.b, delimiter = ",", fmt = "%s")
+		np.savetxt(weightName, self.w, delimiter = ",", fmt = "%s")
+		np.savetxt(biasName, self.b, delimiter = ",", fmt = "%s")
 		np.savetxt(filename, csvOutput, delimiter=",", fmt = "%s")
 		#np.savetxt(sys.argv[3], csvOutput, delimiter=",", fmt = "%s")
 

@@ -14,23 +14,25 @@ def sort_ranges(inputCsv):
 		age = arrayAge[i]
 		pay = arrayHours[i]
 
-		if age >= 0 and age <= 25:
+		if age >= 0 and age <= 18:
 			arrayAge[i] = 0
+		elif age>=19 and age <= 25:
+			arrayAge[i] = 4
 		elif age>=26 and age <= 45:
-			arrayAge[i] = 1
+			arrayAge[i] = 3
 		elif age>=46 and age <= 65:
 			arrayAge[i] = 2
 		elif age>65:
-			arrayAge[i] = 3 
+			arrayAge[i] = 1 
 
 		if pay >= 0 and pay <= 25:
 			arrayHours[i] = 0
 		elif pay>=26and pay <= 40:
-			arrayHours[i] = 1
+			arrayHours[i] = 3
 		elif pay>=41 and pay <= 60:
 			arrayHours[i] = 2
 		elif pay>61:
-			arrayHours[i] = 3 
+			arrayHours[i] = 1 
 
 
 
@@ -62,14 +64,14 @@ def sort_capital(inputCsv):
 		elif gain < medianGain and gain > 0:
 			arrayCapG[i] = 1
 		elif gain >= medianGain:
-			arrayCapG[i] = 2
+			arrayCapG[i] = 3
 
 		if loss <= 0:
 			arrayCapL[i] = 0
 		elif loss < medianLoss and loss > 0:
 			arrayCapL[i] = 1
 		elif loss >= medianLoss:
-			arrayCapL[i] = 2
+			arrayCapL[i] = 3
 
 	inputCsv[:,3] = arrayCapG
 	inputCsv[:,4] = arrayCapL
@@ -122,7 +124,8 @@ def sort_data(inputCsv):
 	idxEmployer = np.array([[6],[7,12],[8,13],[9],[10,11],[14]])
 	idxEducation = np.array([[15,16,17,18,19,20,21,28],[22,23],[24],[25],\
 													[26,30],[27],[29]])
-	idxMarital = np.array([[31,36],[32,33],[34,35],[37]])
+	idxMarital = np.array([[31,36],[32,33,34,37],[34,35]])
+	#idxMarital = np.array([[31,36],[32,33],[34,35],[37]])
 	idxOccupation = np.array([[38],[39],[40,42,43,44,51],[41],[45,46],[47],\
 													[48,50],[49,52]])
 	idxFamRole = np.array([[53],[54],[55],[56],[57],[58]])
@@ -141,7 +144,7 @@ def sort_data(inputCsv):
 
 	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
 	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
-	idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation],[idxFamRole]])
+	idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation]])
 
 
 	#finalArray = finalArray.reshape(1,inputCsv.shape[0])
