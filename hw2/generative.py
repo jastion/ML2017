@@ -15,21 +15,16 @@ class ProbGenDesc:
 		self.percentValidate = inputValidate
 		self.setTraining, self.setTesting = self.feature_normalize(inputTraining,inputTesting)
 
-		self.setTraining = fc.cut_data(self.setTraining)
-		self.setTesting = fc.cut_data(self.setTesting)
+		setTraining = fc.sort_ranges(self.setTraining)
+		setTraining = fc.sort_data(self.setTraining)
+
+		setTesting = fc.sort_ranges(self.setTesting)
+		setTesting = fc.sort_data(self.setTesting)
 
 		mu = -1
 		sigma = 0.5
 		#Initialize Number of Features,  Weights, Bias
-		self.numWeights = (self.setTraining.shape[1])
-
-		self.w = sigma* np.random.rand(self.numWeights,1) + mu 
-		self.b = sigma * np.random.rand(1,1) + mu
-
-		#self.setTraining = self.normalize_range(self.setTraining)
-		#self.setTraining, meanI, stDevI = self.normalize_mean(self.setTraining)
-		#self.meanTraining = meanI
-		#self.stDevTraining = stDevI
+		self.w, self.b = self.classification()
 
 		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
 
@@ -45,9 +40,54 @@ class ProbGenDesc:
 		#Segments total training data into validation and training data sets
 		self.setValidation = self.setTraining[idxSegment:,:]
 		self.setTraining = self.setTraining[:idxSegment,:]
-		#print(self.setValidation.shape)
-		#print(self.setTraining.shape)
+
 		print ("Initialize Complete!")
+
+	def classification(self):
+
+		binaryValNum1 = np.where(self.setTraining[:,-1] == 0)
+		binaryValNum2 = np.where(self.setTraining[:,-1] == 1)
+
+		N1 = binaryValNum1[0].size#(19807)
+		N2 = binaryValNum2[0].size#(6241)
+
+		binaryValData1 = np.array([]).reshape(0,int(self.setTraining[:,:-1].shape[1]))
+		binaryValData2 = np.array([]).reshape(0,int(self.setTraining[:,:-1].shape[1]))
+		
+		for idx in binaryValNum1[0]:
+			binaryValData1 = np.vstack((binaryValData1,self.setTraining[idx,:-1]))#(19807,106)
+
+		for idx2 in binaryValNum2[0]:
+			binaryValData2 = np.vstack((binaryValData2,self.setTraining[idx2,:-1]))#(6241,106)
+		
+		mean1 = np.array([]).reshape(0,binaryValData1.shape[1])
+		mean2 = np.array([]).reshape(0,binaryValData2.shape[1])
+
+		for idx in range(binaryValData1.shape[1]):
+			m = np.mean(binaryValData1[:,idx])
+			mean1 = np.append(mean1,m)
+
+		for idx in range(binaryValData2.shape[1]):
+			m = np.mean(binaryValData2[:,idx])
+			mean2 = np.append(mean2,m)
+
+		mean1 = mean1.reshape(binaryValData1.shape[1],1)#(106,1)
+		mean2 = mean2.reshape(binaryValData2.shape[1],1)#(106,1)
+
+		covar1 = np.cov(binaryValData1, rowvar = False, bias = True)#(106,106)
+		covar2 = np.cov(binaryValData2, rowvar = False, bias = True)#(106,106)
+
+		covarTotal = ((N1*1.0)/(N1+N2))*covar1+((N2*1.0)/(N1+N2))*covar2#(106,106)
+
+		covarInvTotal = np.linalg.inv(covarTotal)
+
+		w = np.dot((mean1-mean2).T, covarInvTotal).T#(106,1)
+
+		b1 = (-1.0/2)*np.dot(np.dot((mean1.T), covarInvTotal), mean1)
+		b2 = (1.0/2)*np.dot(np.dot((mean2.T), covarInvTotal), mean2)
+		b = b1+b2+np.log((N1*1.0)/N2)
+		print("classification completed")
+		return w,b
 
 	def feature_normalize(self,X_train, X_test):
 		# feature normalization with all X
@@ -70,6 +110,14 @@ class ProbGenDesc:
 
 		return X_train_normed, X_test_normed
 
+	def sigmoid(self,X):
+		'''Compute the sigmoid function '''
+		#d = zeros(shape=(X.shape))
+		den = 1.0 + np.exp(-1.0 * X)
+		output = 1.0 / den
+		#check for Nan?
+		return np.clip(output,0.000000000000000001,0.99999999999999999999999)
+
 	def bound_prediction(self,prediction):
 		boundary = np.mean(prediction)
 		#print(prediction[0:5])
@@ -77,57 +125,13 @@ class ProbGenDesc:
 		#print(ans[0:5])
 		return ans
 
-	def train_gen(self,iteration, eta):
-		#normalize??
-		inputData = self.setTraining[:,:-1]
-		inputAns = self.setTraining[:,-1]
-		inputAns = inputAns.reshape(inputAns.shape[0],1)
-
-		inputValidation = self.setValidation[:,:-1]
-		inputValidAns = self.setValidation[:,-1]
-
-		inputValidAns = inputValidAns.reshape(inputValidation.shape[0],1)
-
-		dwTotal = 0
-		dbTotal = 0
-
-		for idx in range(iteration):
-		
-			'''
-			z = np.dot(inputData,self.w) + self.b
-			zValid = np.dot(inputValidation,self.w) + self.b
-
-			prediction = self.sigmoid(z)
-			predictionValid = self.sigmoid(zValid)
-
-			tmpWeight = np.dot(-(inputAns - prediction).T,inputData)
-			tmpBias = np.sum(-(inputAns-prediction))
-
-			dwTotal += tmpWeight ** 2
-			dbTotal += tmpBias ** 2
-
-			self.w -= (eta*tmpWeight.T)/np.sqrt(dwTotal).T
-			self.b -= (eta*tmpBias)/np.sqrt(dbTotal)
-
-			ansTraining = self.bound_prediction(prediction)
-			ansValid = self.bound_prediction(predictionValid)
-			#update weights
-			#self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (2 * coeff * self.weights)
-			#self.bias += (eta * diffBias)/np.sqrt(dbTotal)
-
-			if (idx % 1000) == 0:
-				loss = self.compute_cost(ansTraining,inputAns)
-				lossValid = self.compute_cost(ansValid, inputValidAns)
-				print ("It: %d  Train Acc: %f Valid Acc: %f" \
-					% (idx,loss,lossValid))
-			'''
-		print("training done!")
-		return 0
 
 	def run_gen_model(self):
 		#Runs test set on trained weights
 		setTesting = self.setTesting
-
+		print(setTesting.shape)
+		print(self.w.shape)
+		print(self.b.shape)
 		z = np.dot(setTesting,self.w) + self.b
 		prediction = self.sigmoid(z)
 		finalPrediction = self.bound_prediction(prediction)

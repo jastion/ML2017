@@ -1,6 +1,7 @@
 import numpy as np
 import feature_classification as fc
 import sys
+import time
 class LogDesc:
 	#This class contains functions to perform Gradient
 	def __init__(self, inputTraining, inputTrainingAns,inputTesting, inputValidate):
@@ -174,130 +175,14 @@ class LogDesc:
 		for idx in range (16281):
 			csvOutput[idx+1,0] = str(idx+1)
 			csvOutput[idx+1,1] = int(finalPrediction[idx,0])
+		filename = "log_output_"+time.strftime("%Y%m%d-%H%M%S")+".csv"
+
 		#Write data to CSV
 		np.savetxt("w_pm25.csv", self.w, delimiter = ",", fmt = "%s")
 		np.savetxt("b_pm25.csv", self.b, delimiter = ",", fmt = "%s")
-		np.savetxt("prediction.csv", csvOutput, delimiter=",", fmt = "%s")
+		np.savetxt(filename, csvOutput, delimiter=",", fmt = "%s")
 		#np.savetxt(sys.argv[3], csvOutput, delimiter=",", fmt = "%s")
 
 		print("Save Complete!")
 		return 0
 
-	def neural_network(self, iterations, eta):
-		#Non-implemented Neural Network function
-		#Developer Notes:
-		#	To be Implemented
-		#		Back Propagation
-		#		Error checking
-		#		Different activation Functions
-		#		Variable Hidden Layers?
-
-		self.eta = eta;
-		self.iterations = iterations
-		#self.errorValid = np.array([]).reshape(iterations,1)
-		#self.errorTrain = np.array([]).reshape(iterations,1)
-		
-		#Seed
-		np.random.seed(1)
-		#Collect Training and Ground Truth set
-		X = self.setTraining[:,:-1].reshape(self.setTraining.shape[0],self.setTraining.shape[1]-1)#(4521,162)
-		y = self.setTraining[:,-1].reshape(self.setTraining.shape[0],1)#(4521,1)
-
-		#Collect Validation and Ground Truth set
-		xValid = self.setValidation[:,:-1].reshape(self.setValidation.shape[0],self.setValidation.shape[1]-1)#(4521,162)
-		yValid = self.setValidation[:,-1].reshape(self.setValidation.shape[0],1)#(4521,1)
-
-		#Hidden Layer nodes
-		hiddenLayer = 50
-		#initialize synapses
-		syn0 = 2*np.random.random((self.numWeights,self.numWeights)) - 1
-		#syn0 = 2*np.random.random((self.numWeights,1)) - 1
-		#syn1 = 2*np.random.random((hiddenLayer,1)) - 1	
-
-		#initialize previous weights
-		prevSynWeightUpdate0 = np.zeros_like(syn0)
-		#prevSynWeightUpdate1 = np.zeros_like(syn1)
-
-		syn0DirCount = np.zeros_like(syn0)
-		#syn1DirCount = np.zeros_like(syn1)
-		#alphas = [0.0001,0.001,0.01,0.1,1,10,100,1000]
-		alphas = [0.0001]
-		for alpha in alphas:
-			#print (alpha)
-			#Iterate over neural network
-			for idx in xrange(iterations):
-				layer0 = X
-				layer0V = xValid
-
-				layer1 = self.sigmoid(np.dot(layer0,syn0))
-				#layer2 = self.sigmoid(np.dot(layer1,syn1))
-
-				layer1V = self.sigmoid(np.dot(layer0V,syn0))
-				#layer2V = self.sigmoid(np.dot(layer1V,syn1))
-
-				#errorLayer2V = yValid - layer2V
-				#errorLayer2 = y - layer2
-				errorLayer1 = y - layer1
-				#deltaLayer2 = errorLayer2*self.sigmoid_output_to_derivative(layer2)
-				#errorLayer1 = deltaLayer2.dot(syn1.T)
-				deltaLayer1 = errorLayer1*self.sigmoid_output_to_derivative(layer1)
-
-				
-				errorLayer1V = yValid - layer1V
-				if (idx % 100) == 0:
-					#a = str(np.mean(np.abs(errorLayer2)))
-					b = str(np.mean(np.abs(errorLayer1)))
-					d = str(np.mean(np.abs(errorLayer1V)))
-					#c = str(np.mean(np.abs(errorLayer2V)))
-					print ("Iter:" + str(idx) + "  Error1:" + b + "    Validation: " + d)
-
-				synWeightUpdate0 = layer1.T.dot(deltaLayer1)
-				#synWeightUpdate0 = layer1.T.dot(deltaLayer2)
-				#synWeightUpdate1 = layer2.T.dot(deltaLayer1)
-
-				#if idx > 0:
-			#		syn0DirCount += np.abs(((synWeightUpdate0 > 0)+0) - ((prevSynWeightUpdate0 > 0) + 0))
-		#			syn1DirCount += np.abs(((synWeightUpdate1 > 0)+0) - ((prevSynWeightUpdate1 > 0) + 0))
-				
-				#syn1 -= eta * synWeightUpdate1.T
-				#print(syn0.shape)
-				#print(alpha)
-				#print(synWeightUpdate0.shape)
-				syn0 += alpha * synWeightUpdate0.T
-
-				prevSynWeightUpdate0 = synWeightUpdate0
-				#prevSynWeightUpdate1 = synWeightUpdate1
-
-			#np.savetxt("./data/NN.csv", layer2, delimiter = ",", fmt = "%s")
-		self.syn0 = syn0
-		#self.syn1 = syn1
-		return 0
-	def sigmoid_output_to_derivative(self,output):
-		#Sigmoid derivative function
-		return output*(1-output)
-
-	def test_nn(self):
-		#Test function to implement Neural network
-		setTesting = self.setTesting
-		#prediction = setTesting.dot(self.weights)+self.bias
-
-		syn0 = self.syn0
-		#syn1 = self.syn1
-
-		layer0 = setTesting
-		layer1 = self.sigmoid(np.dot(layer0,syn0))
-		#layer2 = self.sigmoid(np.dot(layer1,syn1))
-		layer1 = self.bound_prediction(layer1)
-
-		csvOutput = np.zeros((16281+1,1+1), dtype ="|S6")
-		csvOutput[0,0] = "id"
-		csvOutput[0,1] = "label"
-
-		for idx in range (16281):
-			csvOutput[idx+1,0] = str(idx+1)
-			csvOutput[idx+1,1] = int(layer1[idx,0])
-
-		np.savetxt("./data/syn0_pm25.csv", syn0, delimiter = ",", fmt = "%s")
-		#np.savetxt("./data/syn1_pm25.csv", syn1, delimiter = ",", fmt = "%s")
-		np.savetxt("./data/NN_output.csv", layer1, delimiter=",", fmt = "%s")
-		return 0

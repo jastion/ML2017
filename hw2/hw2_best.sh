@@ -5,4 +5,4 @@
 #$5: provided test feature (X_test)     $6: prediction.csv
 #./hw2_best.sh train.csv test.csv X_train Y_train X_test prediction.csv
 
-python2.7 hw2.py $1 $2 $3 $4 $5 $6
+python2.7 hw2_log.py $1 $2 $3 $4 $5 $6
