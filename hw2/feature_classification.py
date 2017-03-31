@@ -13,22 +13,30 @@ def sort_ranges(inputCsv):
 	for i in range(inputCsv.shape[0]):
 		age = arrayAge[i]
 		pay = arrayHours[i]
-
+		if age >= 0 and age <= 20:
+			arrayAge[i] = 0
+		elif age>=21 and age <= 45:
+			arrayAge[i] = 50
+		elif age>=46 and age <= 65:
+			arrayAge[i] = 10
+		elif age>65:
+			arrayAge[i] = 1
+		'''
 		if age >= 0 and age <= 18:
 			arrayAge[i] = 0
 		elif age>=19 and age <= 25:
-			arrayAge[i] = 4
+			arrayAge[i] = 50
 		elif age>=26 and age <= 45:
-			arrayAge[i] = 3
+			arrayAge[i] = 11
 		elif age>=46 and age <= 65:
-			arrayAge[i] = 2
+			arrayAge[i] = 10
 		elif age>65:
-			arrayAge[i] = 1 
-
+			arrayAge[i] = 1
+		'''
 		if pay >= 0 and pay <= 25:
 			arrayHours[i] = 0
 		elif pay>=26and pay <= 40:
-			arrayHours[i] = 3
+			arrayHours[i] = 20
 		elif pay>=41 and pay <= 60:
 			arrayHours[i] = 2
 		elif pay>61:
@@ -62,16 +70,16 @@ def sort_capital(inputCsv):
 		if gain <= 0:
 			arrayCapG[i] = 0
 		elif gain < medianGain and gain > 0:
-			arrayCapG[i] = 1
+			arrayCapG[i] = 5
 		elif gain >= medianGain:
-			arrayCapG[i] = 3
+			arrayCapG[i] = 70
 
 		if loss <= 0:
-			arrayCapL[i] = 0
+			arrayCapL[i] = 70
 		elif loss < medianLoss and loss > 0:
 			arrayCapL[i] = 1
 		elif loss >= medianLoss:
-			arrayCapL[i] = 3
+			arrayCapL[i] = 0
 
 	inputCsv[:,3] = arrayCapG
 	inputCsv[:,4] = arrayCapL
@@ -121,6 +129,19 @@ def sort_data(inputCsv):
 	arrayCountry = inputCsv[:,64:]
 
 	
+	idxEmployer = np.array([[6,7,12],[8,13],[9],[10,11],[14]])
+	idxEducation = np.array([[15,16,17,18,19,20,21,28],[22,23,26,30],[24,25,27],\
+													[29]])
+	idxMarital = np.array([[31,36],[32,33,34,37],[35]])
+	#idxMarital = np.array([[31,36],[32,33],[34,35],[37]])
+	idxOccupation = np.array([[38,49,50],[39],[40,42,43,44,51],[41],[45,46],[47],\
+													[48],[52]])
+	idxFamRole = np.array([[53],[54],[55],[56],[57],[58]])
+	idxRace = np.array([[59],[60],[61],[62],[63]])
+	idxCountry = np.array([[64,88,93,100,103],[65,72,82,84,97],[66,80,99],\
+				[67,70,71,92],[68,83,87],[69,76,77,79,86,89,90,91,96,101],\
+				[73,74,78,85],[75,81,94,95,98,104],[102],[105]])
+	'''
 	idxEmployer = np.array([[6],[7,12],[8,13],[9],[10,11],[14]])
 	idxEducation = np.array([[15,16,17,18,19,20,21,28],[22,23],[24],[25],\
 													[26,30],[27],[29]])
@@ -133,19 +154,20 @@ def sort_data(inputCsv):
 	idxCountry = np.array([[64,88,93,100,103],[65,72,82,84,97],[66,80,99],\
 				[67,70,71,92],[68,83,87],[69,76,77,79,86,89,90,91,96,101],\
 				[73,74,78,85],[75,81,94,95,98,104],[102],[105]])
-	
+	'''
 
 	finalArray = arrayAge
+	#finalArray = arrayWgt
 	#finalArray = np.vstack((arrayAge,arrayWgt))
-	#finalArray = np.vstack((finalArray,arraySex.reshape(1,arraySex.shape[0])))
+	finalArray = np.vstack((finalArray,arraySex.reshape(1,arraySex.shape[0])))
 	finalArray = np.vstack((finalArray,arrayCapitalG.reshape(1,arrayCapitalG.shape[0])))
-	#finalArray = np.vstack((finalArray,arrayCapitalL.reshape(1,arrayCapitalL.shape[0])))
-	#finalArray = np.vstack((finalArray,arrayHours.reshape(1,arrayHours.shape[0])))
+	finalArray = np.vstack((finalArray,arrayCapitalL.reshape(1,arrayCapitalL.shape[0])))
+	finalArray = np.vstack((finalArray,arrayHours.reshape(1,arrayHours.shape[0])))
 
 	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
-	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
-	idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation]])
-
+	idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole]])
+	#idxArray = np.array([[idxFamRole],[idxRace],[idxCountry]])
+	#idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation]])
 
 	#finalArray = finalArray.reshape(1,inputCsv.shape[0])
 	for index in range(len(idxArray)):
@@ -164,6 +186,8 @@ def sort_data(inputCsv):
 				finalArray = np.vstack((finalArray,tmpHolder))
 			#print(finalArray.shape)
 	finalArray = finalArray.T
+
+
 	return finalArray
 
 def cut_data(inputCsv):

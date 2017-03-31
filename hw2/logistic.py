@@ -21,8 +21,8 @@ class LogDesc:
 		setTesting = fc.sort_ranges(self.setTesting)
 		setTesting = fc.sort_data(self.setTesting)
 
-		mu = -1
-		sigma = 0.5
+		mu = -1.0
+		sigma = 1.5
 		#Initialize Number of Features,  Weights, Bias
 		self.numWeights = (self.setTraining.shape[1])
 
@@ -33,7 +33,6 @@ class LogDesc:
 		#self.setTraining, meanI, stDevI = self.normalize_mean(self.setTraining)
 		#self.meanTraining = meanI
 		#self.stDevTraining = stDevI
-
 
 		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
 		#Shuffle data
@@ -155,7 +154,7 @@ class LogDesc:
 			dbTotal += tmpBias ** 2
 
 			self.w -= ((eta*tmpWeight.T)+((lambdaC/2)*dwTotal.T))/np.sqrt(dwTotal).T
-			self.b -= (eta*tmpBias)/np.sqrt(dbTotal)
+			self.b -= ((eta*tmpBias)+((lambdaC/2)*dbTotal))/np.sqrt(dbTotal)
 
 			ansTraining = self.bound_prediction(prediction)
 			ansValid = self.bound_prediction(predictionValid)
