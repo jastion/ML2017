@@ -16,16 +16,12 @@ class ProbGenDesc:
 		self.setTraining, self.setTesting = self.feature_normalize(inputTraining,inputTesting)
 
 		self.setTraining = fc.sort_ranges(self.setTraining)
-		self.setTraining,idxRow = fc.sort_data(self.setTraining,0)
-
-		print(self.setAnswer.shape)
-		print(self.setTraining.shape)
-		self.setAnswer = np.delete(self.setAnswer,idxRow,axis=0)
+		#self.setTraining,idxRow = fc.sort_data(self.setTraining,0)
 
 		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
 
 		self.setTesting = fc.sort_ranges(self.setTesting)
-		self.setTesting = fc.sort_data(self.setTesting,1)
+		#self.setTesting = fc.sort_data(self.setTesting,1)
 
 		#Initialize Number of Features,  Weights, Bias
 		self.w, self.b = self.classification()
@@ -123,18 +119,15 @@ class ProbGenDesc:
 		return np.clip(output,0.000000000000000001,0.99999999999999999999999)
 
 	def bound_prediction(self,prediction):
-		boundary = np.mean(prediction)
-		#print(prediction[0:5])
 		ans = np.rint(prediction)
-		#print(ans[0:5])
+		ans = abs(ans - 1)
 		return ans
 
 
 	def run_gen_model(self):
 		#Runs test set on trained weights
 		setTesting = self.setTesting
-		print(setTesting.shape)
-		print(self.w.shape)
+
 		z = np.dot(setTesting,self.w) + self.b
 		prediction = self.sigmoid(z)
 		finalPrediction = self.bound_prediction(prediction)

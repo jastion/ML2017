@@ -177,7 +177,7 @@ def sort_data(inputCsv,operatingType):
 	finalArray = np.vstack((finalArray,arrayHours.reshape(1,arrayHours.shape[0])))
 
 	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
-	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxCountry]])
+	idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxCountry]])
 	#idxArray = np.array([[idxFamRole],[idxRace],[idxCountry]])
 	#idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation]])
 
