@@ -9,33 +9,26 @@ class LogDesc:
 		#Preprocesses and sorts necessary data
 		
 		#save input data
-		#self.setTraining = inputTraining
-		#self.setTesting = inputTesting
 		self.setAnswer = inputTrainingAns.reshape(inputTraining.shape[0],1)
 		self.percentValidate = inputValidate
+
 		self.setTraining, self.setTesting = self.feature_normalize(inputTraining,inputTesting)
 
-		setTraining = fc.sort_ranges(self.setTraining)
-		setTraining = fc.sort_data(self.setTraining)
+		self.setTraining = fc.sort_ranges(self.setTraining)
+		#setTraining = fc.sort_data(self.setTraining)
+		self.setTesting = fc.sort_ranges(self.setTesting)
+		#setTesting = fc.sort_data(self.setTesting)
 
-		setTesting = fc.sort_ranges(self.setTesting)
-		setTesting = fc.sort_data(self.setTesting)
-
-		mu = -1
-		sigma = 0.5
+		mu = -1.0
+		sigma = 1.5
 		#Initialize Number of Features,  Weights, Bias
 		self.numWeights = (self.setTraining.shape[1])
 
 		self.w = sigma* np.random.rand(self.numWeights,1) + mu 
 		self.b = sigma * np.random.rand(1,1) + mu
 
-		#self.setTraining = self.normalize_range(self.setTraining)
-		#self.setTraining, meanI, stDevI = self.normalize_mean(self.setTraining)
-		#self.meanTraining = meanI
-		#self.stDevTraining = stDevI
-
-
 		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
+
 		#Shuffle data
 		np.random.seed(1)
 		np.random.shuffle(self.setTraining)
@@ -44,14 +37,9 @@ class LogDesc:
 		numData = self.setTraining.shape[0]
 		#Get Index to segment data
 		idxSegment = numData - int(numData*self.percentValidate)
-		#print (idxSegment)
-		#print(idxSegment)
-		print(idxSegment)
 		#Segments total training data into validation and training data sets
 		self.setValidation = self.setTraining[idxSegment:,:]
 		self.setTraining = self.setTraining[:idxSegment,:]
-		#print(self.setValidation.shape)
-		#print(self.setTraining.shape)
 		print ("Initialize Complete!")
 
 	def feature_normalize(self,X_train, X_test):
@@ -95,7 +83,7 @@ class LogDesc:
 
 	def sigmoid(self,X):
 		'''Compute the sigmoid function '''
-		#d = zeros(shape=(X.shape))
+
 		den = 1.0 + np.exp(-1.0 * X)
 		output = 1.0 / den
 		if np.isnan(output).any():
@@ -111,22 +99,11 @@ class LogDesc:
 		return 1-loss
 
 	def bound_prediction(self,prediction):
-		boundary = np.mean(prediction)
-		#print("Boundary: " + str(boundary))
-		'''
-		ans = prediction
-		for i in range(len(ans)):
-			if ans[i] >= (1.0-boundary):
-				ans[i] = 1
-			else:
-				ans[i] = 0
-		'''
-		#print(prediction[0:5])
+		#Round to nearest integer
 		ans = np.rint(prediction)
-		#print(ans[0:5])
+
 		return ans
 	def train_logistic(self,iteration, eta,lambdaC):
-		#normalize??
 		inputData = self.setTraining[:,:-1]
 		inputAns = self.setTraining[:,-1]
 		inputAns = inputAns.reshape(inputAns.shape[0],1)
@@ -139,6 +116,9 @@ class LogDesc:
 
 		dwTotal = 0
 		dbTotal = 0
+
+		arrayTrainLoss = np.array([])
+		arrayValidLoss = np.array([])
 
 		for idx in range(iteration):
 		
@@ -154,21 +134,20 @@ class LogDesc:
 			dwTotal += tmpWeight ** 2
 			dbTotal += tmpBias ** 2
 
+			#update weights
 			self.w -= ((eta*tmpWeight.T)+((lambdaC/2)*dwTotal.T))/np.sqrt(dwTotal).T
-			self.b -= (eta*tmpBias)/np.sqrt(dbTotal)
+			self.b -= ((eta*tmpBias)+((lambdaC/2)*dbTotal))/np.sqrt(dbTotal)
 
 			ansTraining = self.bound_prediction(prediction)
 			ansValid = self.bound_prediction(predictionValid)
-			#update weights
-			#self.weights += (eta * diffWeight)/np.sqrt(dwTotal) #- (2 * coeff * self.weights)
-			#self.bias += (eta * diffBias)/np.sqrt(dbTotal)
-
+			
 			if (idx % 100) == 0:
 				loss = self.compute_cost(ansTraining,inputAns)
 				lossValid = self.compute_cost(ansValid, inputValidAns)
 				print ("It: %d  Train Acc: %f Valid Acc: %f" \
 					% (idx,loss,lossValid))
-				#print((lambdaC/2)*dwTotal.T)
+				arrayTrainLoss = np.append(arrayTrainLoss,loss)
+				arrayValidLoss = np.append(arrayValidLoss,lossValid)
 		print("training done!")
 		return 0
 

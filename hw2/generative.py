@@ -15,18 +15,22 @@ class ProbGenDesc:
 		self.percentValidate = inputValidate
 		self.setTraining, self.setTesting = self.feature_normalize(inputTraining,inputTesting)
 
-		setTraining = fc.sort_ranges(self.setTraining)
-		setTraining = fc.sort_data(self.setTraining)
+		self.setTraining = fc.sort_ranges(self.setTraining)
+		self.setTraining,idxRow = fc.sort_data(self.setTraining,0)
 
-		setTesting = fc.sort_ranges(self.setTesting)
-		setTesting = fc.sort_data(self.setTesting)
+		print(self.setAnswer.shape)
+		print(self.setTraining.shape)
+		self.setAnswer = np.delete(self.setAnswer,idxRow,axis=0)
 
-		mu = -1
-		sigma = 0.5
+		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
+
+		self.setTesting = fc.sort_ranges(self.setTesting)
+		self.setTesting = fc.sort_data(self.setTesting,1)
+
 		#Initialize Number of Features,  Weights, Bias
 		self.w, self.b = self.classification()
 
-		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
+		
 
 		#Shuffle data
 		np.random.shuffle(self.setTraining)
@@ -131,7 +135,6 @@ class ProbGenDesc:
 		setTesting = self.setTesting
 		print(setTesting.shape)
 		print(self.w.shape)
-		print(self.b.shape)
 		z = np.dot(setTesting,self.w) + self.b
 		prediction = self.sigmoid(z)
 		finalPrediction = self.bound_prediction(prediction)

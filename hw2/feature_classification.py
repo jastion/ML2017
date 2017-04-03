@@ -13,22 +13,30 @@ def sort_ranges(inputCsv):
 	for i in range(inputCsv.shape[0]):
 		age = arrayAge[i]
 		pay = arrayHours[i]
-
+		if age >= 0 and age <= 20:
+			arrayAge[i] = 0
+		elif age>=21 and age <= 45:
+			arrayAge[i] = 31
+		elif age>=46 and age <= 65:
+			arrayAge[i] = 30
+		elif age>65:
+			arrayAge[i] = 1
+		'''
 		if age >= 0 and age <= 18:
 			arrayAge[i] = 0
 		elif age>=19 and age <= 25:
-			arrayAge[i] = 4
+			arrayAge[i] = 50
 		elif age>=26 and age <= 45:
-			arrayAge[i] = 3
+			arrayAge[i] = 11
 		elif age>=46 and age <= 65:
-			arrayAge[i] = 2
+			arrayAge[i] = 10
 		elif age>65:
-			arrayAge[i] = 1 
-
+			arrayAge[i] = 1
+		'''
 		if pay >= 0 and pay <= 25:
 			arrayHours[i] = 0
 		elif pay>=26and pay <= 40:
-			arrayHours[i] = 3
+			arrayHours[i] = 20
 		elif pay>=41 and pay <= 60:
 			arrayHours[i] = 2
 		elif pay>61:
@@ -62,22 +70,22 @@ def sort_capital(inputCsv):
 		if gain <= 0:
 			arrayCapG[i] = 0
 		elif gain < medianGain and gain > 0:
-			arrayCapG[i] = 1
+			arrayCapG[i] = 5
 		elif gain >= medianGain:
-			arrayCapG[i] = 3
+			arrayCapG[i] = 70
 
 		if loss <= 0:
-			arrayCapL[i] = 0
+			arrayCapL[i] = 70
 		elif loss < medianLoss and loss > 0:
-			arrayCapL[i] = 1
+			arrayCapL[i] = 5
 		elif loss >= medianLoss:
-			arrayCapL[i] = 3
+			arrayCapL[i] = 0
 
 	inputCsv[:,3] = arrayCapG
 	inputCsv[:,4] = arrayCapL
 	return inputCsv
 
-def sort_data(inputCsv):
+def sort_data(inputCsv,operatingType):
 	#0 age
 	#1 fnlwgt
 	#2 sex
@@ -120,32 +128,58 @@ def sort_data(inputCsv):
 	arrayRace = inputCsv[:,59:64]
 	arrayCountry = inputCsv[:,64:]
 
-	
-	idxEmployer = np.array([[6],[7,12],[8,13],[9],[10,11],[14]])
+	if (operatingType==0):
+		#14, 52, 105
+		idxRow1 = np.where(inputCsv[:,14] == 1)[0]
+		idxRow2 = np.where(inputCsv[:,52] == 1)[0]
+		idxRow3 = np.where(inputCsv[:,105] ==1)[0]
+		idxRow = np.array([])
+		idxRow = np.append(idxRow,idxRow1)
+		idxRow = np.append(idxRow,idxRow2)
+		idxRow = np.append(idxRow,idxRow3)
+		idxRow = np.unique(idxRow)
+	else:
+		idxRow = np.array([])
+	'''
+	idxEmployer = np.array([[6,7,12],[8,13],[9],[10,11]])
+	idxEducation = np.array([[15,16,17,18,19,20,21,28],[22,23,26,30],[24,25,27],\
+													[29]])
+	idxMarital = np.array([[31,36],[32,33,34,37],[35]])
+	#idxMarital = np.array([[31,36],[32,33],[34,35],[37]])
+	idxOccupation = np.array([[38,49,50],[39],[40,42,43,44,51],[41],[45,46],[47],\
+													[48]])
+	idxFamRole = np.array([[53],[54],[55],[56],[57],[58]])
+	idxRace = np.array([[59],[60],[61],[62],[63]])
+	idxCountry = np.array([[64,88,93,100,103],[65,72,82,84,97],[66,80,99],\
+				[67,70,71,92],[68,83,87],[69,76,77,79,86,89,90,91,96,101],\
+				[73,74,78,85],[75,81,94,95,98,104],[102]])
+	'''
+	idxEmployer = np.array([[6],[7,12],[8,13],[9],[10,11]])
 	idxEducation = np.array([[15,16,17,18,19,20,21,28],[22,23],[24],[25],\
 													[26,30],[27],[29]])
 	idxMarital = np.array([[31,36],[32,33,34,37],[34,35]])
 	#idxMarital = np.array([[31,36],[32,33],[34,35],[37]])
 	idxOccupation = np.array([[38],[39],[40,42,43,44,51],[41],[45,46],[47],\
-													[48,50],[49,52]])
+													[48,50],[49]])
 	idxFamRole = np.array([[53],[54],[55],[56],[57],[58]])
 	idxRace = np.array([[59],[60],[61],[62],[63]])
 	idxCountry = np.array([[64,88,93,100,103],[65,72,82,84,97],[66,80,99],\
 				[67,70,71,92],[68,83,87],[69,76,77,79,86,89,90,91,96,101],\
-				[73,74,78,85],[75,81,94,95,98,104],[102],[105]])
+				[73,74,78,85],[75,81,94,95,98,104],[102]])
 	
 
 	finalArray = arrayAge
-	#finalArray = np.vstack((arrayAge,arrayWgt))
-	#finalArray = np.vstack((finalArray,arraySex.reshape(1,arraySex.shape[0])))
+	#finalArray = arrayWgt
+	finalArray = np.vstack((arrayAge,arrayWgt))
+	finalArray = np.vstack((finalArray,arraySex.reshape(1,arraySex.shape[0])))
 	finalArray = np.vstack((finalArray,arrayCapitalG.reshape(1,arrayCapitalG.shape[0])))
-	#finalArray = np.vstack((finalArray,arrayCapitalL.reshape(1,arrayCapitalL.shape[0])))
-	#finalArray = np.vstack((finalArray,arrayHours.reshape(1,arrayHours.shape[0])))
+	finalArray = np.vstack((finalArray,arrayCapitalL.reshape(1,arrayCapitalL.shape[0])))
+	finalArray = np.vstack((finalArray,arrayHours.reshape(1,arrayHours.shape[0])))
 
 	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
-	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxRace],[idxCountry]])
-	idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation]])
-
+	#idxArray = np.array([[idxEmployer],[idxEducation],[idxMarital], [idxOccupation], [idxFamRole],[idxCountry]])
+	#idxArray = np.array([[idxFamRole],[idxRace],[idxCountry]])
+	#idxArray = np.array([[idxEmployer],[idxMarital],[idxEducation],[idxOccupation]])
 
 	#finalArray = finalArray.reshape(1,inputCsv.shape[0])
 	for index in range(len(idxArray)):
@@ -158,29 +192,17 @@ def sort_data(inputCsv):
 				#iterate through values in array
 				tmpHolder = np.zeros((1, inputCsv.shape[0]))
 				for k in range(len(currColumn[i])):
-					#print currColumn[i][k]
+
 					tmpHolder += inputCsv[:,currColumn[i][k]]
 				tmpHolder = np.clip(tmpHolder,0,1)
 				finalArray = np.vstack((finalArray,tmpHolder))
-			#print(finalArray.shape)
 	finalArray = finalArray.T
-	return finalArray
+	finalArray = np.delete(finalArray,idxRow,axis=0)
+
+	return finalArray, idxRow
 
 def cut_data(inputCsv):
 
-	#0 age
-	#1 fnlwgt
-	#2 sex
-	#3 capital_gain
-	#4 capital_loss
-	#5 hours
-	#6-14 Employer 			9
-	#15-30 Education 		16
-	#31-37 Marital 			6
-	#38-52 Occupation 		16
-	#53-58 Family Role  	5
-	#59-63 Race 			5
-	#64-105 Origin of Countries 43 
 
 	age = np.array([0])
 	fnlwgt = np.array([1])
@@ -204,3 +226,40 @@ def cut_data(inputCsv):
 
 	return outputCsv
 	
+def remove_unknown(inputCsv):
+	print(inputCsv.shape)
+	idxRow1 = np.where(inputCsv[:,14] == 1)[0]
+	idxRow2 = np.where(inputCsv[:,52] == 1)[0]
+	idxRow3 = np.where(inputCsv[:,105] == 1)[0]
+
+	idxRow = np.array([])
+	idxRow = np.append(idxRow,idxRow1)
+	idxRow = np.append(idxRow,idxRow2)
+	idxRow = np.append(idxRow,idxRow3)
+	idxRow = np.unique(idxRow)
+	outputCsv = np.delete(inputCsv,idxRow,axis=0)
+	outputCsv = np.delete(outputCsv,[14,52,105],axis=1)
+	print(outputCsv.shape)
+	return outputCsv, idxRow
+
+def balance_data(inputCsv):
+
+	idxRowValA = np.where(inputCsv[:,-1] == 0)[0]
+	idxRowValB = np.where(inputCsv[:,-1] == 1)[0]
+
+	arrayDataA = inputCsv[idxRowValA,:]
+	arrayDataB = inputCsv[idxRowValB,:]
+
+	arrayDataA=arrayDataA[0:arrayDataB.shape[0],:]
+
+
+	#arrayDataC = np.vstack((arrayDataB,arrayDataB))
+	#arrayDataB = np.vstack((arrayDataB,arrayDataB))
+
+	outputCsv = np.vstack((arrayDataA,arrayDataB))
+	np.random.shuffle(outputCsv)
+
+
+	return outputCsv
+
+
