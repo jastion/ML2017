@@ -2,10 +2,7 @@ import numpy as np
 def sort_ranges(inputCsv):
 	arrayAge = inputCsv[:,0]
 	arrayHours = inputCsv[:,5]
-	arrayFn = inputCsv[:,1]
 
-	#ageRange = np.array([[0,25],[26,45],[46,65],[66,1000]])
-	#payRange = np.array([[0,25],[26,40],[41,60],[60,1000]])
 	#Age Range: 0-25, 26-45, 46-65, +66
 	#Pay Range: 0-25, 26-40, 41-60, 60+
 	# each cut into levels None (0), Low (0 < median of the values greater zero < max) and High (>=max).
@@ -21,18 +18,7 @@ def sort_ranges(inputCsv):
 			arrayAge[i] = 30
 		elif age>65:
 			arrayAge[i] = 1
-		'''
-		if age >= 0 and age <= 18:
-			arrayAge[i] = 0
-		elif age>=19 and age <= 25:
-			arrayAge[i] = 50
-		elif age>=26 and age <= 45:
-			arrayAge[i] = 11
-		elif age>=46 and age <= 65:
-			arrayAge[i] = 10
-		elif age>65:
-			arrayAge[i] = 1
-		'''
+
 		if pay >= 0 and pay <= 25:
 			arrayHours[i] = 0
 		elif pay>=26and pay <= 40:
@@ -202,8 +188,6 @@ def sort_data(inputCsv,operatingType):
 	return finalArray, idxRow
 
 def cut_data(inputCsv):
-
-
 	age = np.array([0])
 	fnlwgt = np.array([1])
 	sex = np.array([2])
@@ -251,15 +235,7 @@ def balance_data(inputCsv):
 	arrayDataB = inputCsv[idxRowValB,:]
 
 	arrayDataA=arrayDataA[0:arrayDataB.shape[0],:]
-
-
-	#arrayDataC = np.vstack((arrayDataB,arrayDataB))
-	#arrayDataB = np.vstack((arrayDataB,arrayDataB))
-
 	outputCsv = np.vstack((arrayDataA,arrayDataB))
 	np.random.shuffle(outputCsv)
 
-
 	return outputCsv
-
-

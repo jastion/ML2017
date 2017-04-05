@@ -11,14 +11,23 @@ class LogDesc:
 		#save input data
 		self.setAnswer = inputTrainingAns.reshape(inputTraining.shape[0],1)
 		self.percentValidate = inputValidate
-
+		self.setTraining = inputTraining
+		self.setTesting = inputTesting
+		#normalize non-binary features
 		self.setTraining, self.setTesting = self.feature_normalize(inputTraining,inputTesting)
+
+
 
 		self.setTraining = fc.sort_ranges(self.setTraining)
 		#setTraining = fc.sort_data(self.setTraining)
 		self.setTesting = fc.sort_ranges(self.setTesting)
 		#setTesting = fc.sort_data(self.setTesting)
 
+		#excise data
+		#a = np.arange(106)
+		#a = np.delete(a,3)
+		#self.setTraining = self.setTraining[:,a]
+		#self.setTesting = self.setTesting[:,a]
 		mu = -1.0
 		sigma = 1.5
 		#Initialize Number of Features,  Weights, Bias
@@ -48,7 +57,7 @@ class LogDesc:
 		mu = np.mean(X_all, axis=0)
 		sigma = np.std(X_all, axis=0)
 		
-		# only apply normalization on continuos attribute
+		# only apply normalization on continuous attributes
 		index = [0, 1, 3, 4, 5]
 		mean_vec = np.zeros(X_all.shape[1])
 		std_vec = np.ones(X_all.shape[1])
@@ -104,22 +113,24 @@ class LogDesc:
 
 		return ans
 	def train_logistic(self,iteration, eta,lambdaC):
+		#read data
 		inputData = self.setTraining[:,:-1]
 		inputAns = self.setTraining[:,-1]
 		inputAns = inputAns.reshape(inputAns.shape[0],1)
 
 		inputValidation = self.setValidation[:,:-1]
-
 		inputValidAns = self.setValidation[:,-1]
-
 		inputValidAns = inputValidAns.reshape(inputValidation.shape[0],1)
 
+		#adagrad value initiation
 		dwTotal = 0
 		dbTotal = 0
 
+		#stores Loss values for graphing
 		arrayTrainLoss = np.array([])
 		arrayValidLoss = np.array([])
 
+		#iterates through logistic regression
 		for idx in range(iteration):
 		
 			z = np.dot(inputData,self.w) + self.b
@@ -135,12 +146,14 @@ class LogDesc:
 			dbTotal += tmpBias ** 2
 
 			#update weights
-			self.w -= ((eta*tmpWeight.T)+((lambdaC/2)*dwTotal.T))/np.sqrt(dwTotal).T
-			self.b -= ((eta*tmpBias)+((lambdaC/2)*dbTotal))/np.sqrt(dbTotal)
+			self.w -= ((eta*tmpWeight.T))/np.sqrt(dwTotal).T +((lambdaC/2)*dwTotal.T)
+			self.b -= ((eta*tmpBias))/np.sqrt(dbTotal) +((lambdaC/2)*dbTotal)
 
+			#rounds answer
 			ansTraining = self.bound_prediction(prediction)
 			ansValid = self.bound_prediction(predictionValid)
 			
+			#prints out loss value for every 100 epochs
 			if (idx % 100) == 0:
 				loss = self.compute_cost(ansTraining,inputAns)
 				lossValid = self.compute_cost(ansValid, inputValidAns)
@@ -149,7 +162,7 @@ class LogDesc:
 				arrayTrainLoss = np.append(arrayTrainLoss,loss)
 				arrayValidLoss = np.append(arrayValidLoss,lossValid)
 		print("training done!")
-		return 0
+		return arrayTrainLoss, arrayValidLoss
 
 	def run_log_model(self):
 		#Runs test set on trained weights
@@ -169,14 +182,14 @@ class LogDesc:
 			csvOutput[idx+1,0] = str(idx+1)
 			csvOutput[idx+1,1] = int(finalPrediction[idx,0])
 		timestamp = time.strftime("%Y%m%d-%H%M%S")
-		filename = "./results/log_output_"+timestamp+".csv"
-		weightName = "./results/log_weight_"+timestamp+".csv"
-		biasName = "./results/log_bias_"+timestamp+".csv"
+		#filename = "./results/log_output_"+timestamp+".csv"
+		#weightName = "./results/log_weight_"+timestamp+".csv"
+		#biasName = "./results/log_bias_"+timestamp+".csv"
 		#Write data to CSV
-		np.savetxt(weightName, self.w, delimiter = ",", fmt = "%s")
-		np.savetxt(biasName, self.b, delimiter = ",", fmt = "%s")
-		np.savetxt(filename, csvOutput, delimiter=",", fmt = "%s")
-		#np.savetxt(sys.argv[3], csvOutput, delimiter=",", fmt = "%s")
+		#np.savetxt(weightName, self.w, delimiter = ",", fmt = "%s")
+		#np.savetxt(biasName, self.b, delimiter = ",", fmt = "%s")
+		#np.savetxt(filename, csvOutput, delimiter=",", fmt = "%s")
+		np.savetxt(sys.argv[6], csvOutput, delimiter=",", fmt = "%s")
 
 		print("Save Complete!")
 		return 0

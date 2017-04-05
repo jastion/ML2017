@@ -9,24 +9,20 @@ class ProbGenDesc:
 		#Preprocesses and sorts necessary data
 		
 		#save input data
-		#self.setTraining = inputTraining
-		#self.setTesting = inputTesting
 		self.setAnswer = inputTrainingAns.reshape(inputTraining.shape[0],1)
 		self.percentValidate = inputValidate
 		self.setTraining, self.setTesting = self.feature_normalize(inputTraining,inputTesting)
 
 		self.setTraining = fc.sort_ranges(self.setTraining)
 		#self.setTraining,idxRow = fc.sort_data(self.setTraining,0)
-
 		self.setTraining = np.append(self.setTraining,self.setAnswer,1)
+
 
 		self.setTesting = fc.sort_ranges(self.setTesting)
 		#self.setTesting = fc.sort_data(self.setTesting,1)
 
 		#Initialize Number of Features,  Weights, Bias
 		self.w, self.b = self.classification()
-
-		
 
 		#Shuffle data
 		np.random.shuffle(self.setTraining)
@@ -35,8 +31,7 @@ class ProbGenDesc:
 		numData = self.setTraining.shape[0]
 		#Get Index to segment data
 		idxSegment = numData - int(numData*self.percentValidate)
-		#print (idxSegment)
-		#print(idxSegment)
+
 		#Segments total training data into validation and training data sets
 		self.setValidation = self.setTraining[idxSegment:,:]
 		self.setTraining = self.setTraining[:idxSegment,:]
@@ -44,13 +39,16 @@ class ProbGenDesc:
 		print ("Initialize Complete!")
 
 	def classification(self):
-
+		#Calculate weights and bias
+		#get number of values
 		binaryValNum1 = np.where(self.setTraining[:,-1] == 0)
 		binaryValNum2 = np.where(self.setTraining[:,-1] == 1)
 
+		#count number of binary class values
 		N1 = binaryValNum1[0].size#(19807)
 		N2 = binaryValNum2[0].size#(6241)
 
+		#Compile values into relevant array
 		binaryValData1 = np.array([]).reshape(0,int(self.setTraining[:,:-1].shape[1]))
 		binaryValData2 = np.array([]).reshape(0,int(self.setTraining[:,:-1].shape[1]))
 		
@@ -60,6 +58,7 @@ class ProbGenDesc:
 		for idx2 in binaryValNum2[0]:
 			binaryValData2 = np.vstack((binaryValData2,self.setTraining[idx2,:-1]))#(6241,106)
 		
+		#calculate mean of each array for each column
 		mean1 = np.array([]).reshape(0,binaryValData1.shape[1])
 		mean2 = np.array([]).reshape(0,binaryValData2.shape[1])
 
@@ -74,15 +73,18 @@ class ProbGenDesc:
 		mean1 = mean1.reshape(binaryValData1.shape[1],1)#(106,1)
 		mean2 = mean2.reshape(binaryValData2.shape[1],1)#(106,1)
 
+		#calculate covariance
 		covar1 = np.cov(binaryValData1, rowvar = False, bias = True)#(106,106)
 		covar2 = np.cov(binaryValData2, rowvar = False, bias = True)#(106,106)
-
 		covarTotal = ((N1*1.0)/(N1+N2))*covar1+((N2*1.0)/(N1+N2))*covar2#(106,106)
 
+		#calculate inverse covariance
 		covarInvTotal = np.linalg.inv(covarTotal)
 
+		#calculate weights
 		w = np.dot((mean1-mean2).T, covarInvTotal).T#(106,1)
 
+		#calculate bias
 		b1 = (-1.0/2)*np.dot(np.dot((mean1.T), covarInvTotal), mean1)
 		b2 = (1.0/2)*np.dot(np.dot((mean2.T), covarInvTotal), mean2)
 		b = b1+b2+np.log((N1*1.0)/N2)
@@ -142,10 +144,10 @@ class ProbGenDesc:
 			csvOutput[idx+1,0] = str(idx+1)
 			csvOutput[idx+1,1] = int(finalPrediction[idx,0])
 		#Write data to CSV
-		np.savetxt("w_pm25.csv", self.w, delimiter = ",", fmt = "%s")
-		np.savetxt("b_pm25.csv", self.b, delimiter = ",", fmt = "%s")
-		np.savetxt("prediction.csv", csvOutput, delimiter=",", fmt = "%s")
-		#np.savetxt(sys.argv[3], csvOutput, delimiter=",", fmt = "%s")
+		#np.savetxt("w_gen.csv", self.w, delimiter = ",", fmt = "%s")
+		#np.savetxt("b_gen.csv", self.b, delimiter = ",", fmt = "%s")
+		#np.savetxt("prediction.csv", csvOutput, delimiter=",", fmt = "%s")
+		np.savetxt(sys.argv[6], csvOutput, delimiter=",", fmt = "%s")
 
 		print("Save Complete!")
 		return 0
