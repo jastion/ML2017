@@ -167,15 +167,9 @@ class ConvNet():
 
 	def add_softmax_layer(self,layerNum):
 		self.model.add(Dense(layerNum, kernel_initializer='normal', activation='softmax'))
+
 	def flatten_model(self):
 		self.model.add(Flatten())
-
-	def create_conv_layers(self,numLayers,parameterList):
-		#
-		while (numLayers > 0):
-
-			numLayers -= 1
-
 
 	def run_model(self,batch_size,nb_epoch,validation,lr, method):
 		print("Running Model")
@@ -237,6 +231,9 @@ class ConvNet():
 		modelName = "./results/"+self.timestamp+"_model.h5"
 		self.model.save(modelName)
 
+	def print_model_summary(self):
+		self.model.summary()
+
 	def predict_test_data(self,batch_size):
 		print("Reading Test Data...")
 
@@ -252,6 +249,7 @@ class ConvNet():
 
 		yTest  = np.genfromtxt(self.fileTesting, dtype=int, skip_header=True, delimiter = ",", usecols = 0)
 		yTest = yTest.reshape(yTest.shape[0],1)
+
 		'''
 		tmpTestData = np.genfromtxt(self.fileTesting,dtype=str,skip_header=True,delimiter =",",usecols = 1)
 
