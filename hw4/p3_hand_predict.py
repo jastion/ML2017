@@ -11,8 +11,8 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 
 test = []
 
-for image_path in glob.glob(base_dir+"/hand/*.png"):
-    image = misc.imread(image_path).flatten()
+for imgPath in glob.glob(base_dir+"/hand/*.png"):
+    image = misc.imread(imgPath).flatten()
     test.append(image)
 
 test = np.asarray(test)
