@@ -1,0 +1,43 @@
+import matplotlib.pyplot as plt
+import numpy as np 
+import sys
+
+
+#dataSigmoid = np.genfromtxt('training_sigmoid.log',delimiter = ',',dtype=str,skip_header=1)
+#dataSoftmax = np.genfromtxt('training_bagofwords.log',delimiter = ',',dtype=str,skip_header=1)
+
+
+#enter name of log files
+dataSigmoid = np.genfromtxt(sys.argv[1],delimiter = ',',dtype=str,skip_header=1)
+dataSoftmax = np.genfromtxt(sys.argv[2],delimiter = ',',dtype=str,skip_header=1)
+
+idxSigmoid = np.where(dataSigmoid=='nan')
+idxSoftmax = np.where(dataSoftmax=='nan')
+
+
+dataSigmoid[idxSigmoid] = '0'
+dataSoftmax[idxSoftmax] = '0'
+
+dataSigmoid = dataSigmoid[:50,3]
+dataSoftmax = dataSoftmax[:50,3]
+
+dataSigmoid = dataSigmoid.astype(float) * 100.0
+dataSoftmax = dataSoftmax.astype(float) * 100.0
+
+x = np.arange(len(dataSigmoid))
+
+fig = plt.figure()
+plt.title('Sigmoid vs BagofWords F1 Score Comparison')
+
+plt.plot(x,dataSigmoid, label='Sigmoid')
+plt.plot(x,dataSoftmax, label='BagofWords')
+plt.legend(loc = 'upper right')
+plt.grid('on')
+
+
+plt.axis([0, 55, 0, 70])
+
+plt.xlabel('Epoch')
+plt.ylabel('F1 Score')
+fig.savefig('fig_bag.png', bbox_inches='tight', pad_inches=0)
+#plt.show()
