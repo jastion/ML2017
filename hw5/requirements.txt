@@ -80,7 +80,7 @@ smach==2.0.0
 smach-ros==2.0.0
 smclib==1.7.19
 software-center-aptd-plugins==0.0.0
-tensorflow-gpu==1.1.0
+tensorflow-gpu==2.5.2
 tf==1.11.8
 tf-conversions==1.11.8
 tf2-geometry-msgs==0.5.15
