@@ -52,7 +52,7 @@ packaging==16.8
 piston-mini-client==0.7.5
 plainbox==0.5.3
 pluginlib==1.10.5
-protobuf==3.3.0
+protobuf==3.15.0
 pycrypto==2.6.1
 pycurl==7.19.3
 pygobject==3.12.0
