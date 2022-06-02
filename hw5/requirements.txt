@@ -31,7 +31,7 @@ genlisp==0.4.15
 genmsg==0.5.8
 genpy==0.5.10
 h5py==2.7.0
-html5lib==0.999
+html5lib==0.99999999
 httplib2==0.8
 image-geometry==1.11.15
 interactive-markers==1.11.3
