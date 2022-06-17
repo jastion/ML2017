@@ -44,7 +44,7 @@ Mako==0.9.1
 MarkupSafe==0.18
 matplotlib==2.0.2
 message-filters==1.11.21
-numpy==1.12.1
+numpy==1.21.0
 oauthlib==0.6.1
 onboard==1.0.1
 oneconf==0.3.7.14.4.1
