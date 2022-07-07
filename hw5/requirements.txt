@@ -68,7 +68,7 @@ qt-dotgraph==0.2.32
 qt-gui==0.2.32
 qt-gui-cpp==0.2.32
 qt-gui-py-common==0.2.32
-requests==2.2.1
+requests==2.20.0
 resource-retriever==1.11.8
 scikit-learn==0.18.1
 scipy==0.19.0
